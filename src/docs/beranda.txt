@@ -1,0 +1,6 @@
+Halaman beranda untuk aplikasi Bantuan Santri.
+1. Menampilkan informasi umum tentang program bantuan santri.
+2. Menyediakan tautan cepat ke formulir isian dan dashboard.
+3. Ada artikel tentang Santri adalah generasi penerus bangsa.
+4. artikel didesain bagus, animated dan responsif.
+5. Gunakan Tailwind CSS untuk styling agar konsisten dengan desain navbar dan elemen lainnyac:\Users\sapta\OneDrive\Documents\Beranda.docx

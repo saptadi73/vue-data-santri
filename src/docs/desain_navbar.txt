@@ -1,0 +1,35 @@
+Buatkan Desain Navigasiu menu yang bagus, keren dan elegan :
+1. Navbar harus responsif dan mudah digunakan di berbagai perangkat.
+2. Gunakan warna yang kontras untuk memastikan keterbacaan teks.
+3. Sertakan logo di sebelah kiri navbar.
+4. Tambahkan menu dropdown untuk kategori yang memiliki sub-menu.
+5. Gunakan ikon untuk memperjelas fungsi menu (misalnya, ikon rumah untuk beranda).
+6. Pastikan ada jarak yang cukup antara elemen-elemen di navbar untuk menghindari kekacauan visual.
+7. Gunakan font yang bersih dan mudah dibaca.
+8. Sertakan tombol pencarian di navbar untuk memudahkan pengguna mencari konten.
+9. Tambahkan efek hover pada item menu untuk memberikan umpan balik visual kepada pengguna.
+10. Pastikan navbar tetap terlihat saat pengguna menggulir halaman (sticky navbar).
+11. Gunakan animasi halus saat membuka dan menutup menu dropdown.
+12. Pertimbangkan untuk menambahkan tombol "Login" atau "Daftar" di sebelah kanan navbar.
+13. Uji desain navbar di berbagai browser untuk memastikan kompatibilitas.
+14. Gunakan Tailwind CSS untuk mempercepat pengembangan dan memastikan konsistensi desain.
+
+Menu Navbar:
+1. beranda
+2. latar belakang
+3. program
+   - program 1
+    - program 2
+    - program 3
+4. galeri
+5. isi formulir
+    - formulir 1
+    - formulir 2
+    - formulir 3
+6. dashboard
+    - sebaran santri
+    - data donatur
+    - distribusi bantuan
+    - klasifikasi bantuan
+7. login / daftar
+8. tombol pencarian
