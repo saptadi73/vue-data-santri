@@ -49,6 +49,16 @@ const router = createRouter({
       component: () => import('@/pages/SantriEdit.vue'),
     },
     {
+      path: '/santri/:santriId/orangtua/tambah',
+      name: 'santri-orangtua-add',
+      component: () => import('@/pages/SantriOrangtuaForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/orangtua/edit/:orangtuaId',
+      name: 'santri-orangtua-edit',
+      component: () => import('@/pages/SantriOrangtuaForm.vue'),
+    },
+    {
       path: '/home',
       redirect: '/',
     },
