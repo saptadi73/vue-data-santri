@@ -350,8 +350,15 @@
                   class="w-full h-40 object-cover"
                 />
                 <div
-                  class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3"
                 >
+                  <button
+                    type="button"
+                    @click="openPhotoModal(photo)"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Lihat
+                  </button>
                   <button
                     type="button"
                     @click="confirmDeletePhoto(photo)"
@@ -517,6 +524,47 @@
         </div>
       </div>
     </div>
+
+    <!-- Photo View Modal -->
+    <div
+      v-if="showPhotoModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+      @click="showPhotoModal = false"
+    >
+      <div
+        class="relative bg-white dark:bg-gray-900 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-auto"
+        @click.stop
+      >
+        <button
+          @click="showPhotoModal = false"
+          class="absolute top-4 right-4 z-10 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 transition-colors"
+          title="Tutup"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
+        <div class="flex items-center justify-center p-8">
+          <img
+            :src="getPhotoUrl(photoToView?.url_photo)"
+            :alt="photoToView?.nama_file || 'Full view'"
+            class="max-w-full max-h-[75vh] object-contain"
+          />
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            <strong>File:</strong> {{ photoToView?.nama_file }}
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -561,6 +609,12 @@ const newFiles = ref([])
 const showDeletePhotoModal = ref(false)
 const photoToDelete = ref(null)
 const deletingPhotoId = ref(null)
+const showPhotoModal = ref(false)
+const photoToView = ref(null)
+const openPhotoModal = (photo) => {
+  photoToView.value = photo
+  showPhotoModal.value = true
+}
 
 // Load santri data
 const loadSantriData = async () => {
