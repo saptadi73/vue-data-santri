@@ -1,5 +1,7 @@
 // API Service for Santri CRUD Operations
-const API_BASE_URL = 'http://localhost:8000/api'
+import { API_BASE_URL } from '@/utils/apiConfig'
+
+const API_ENDPOINT = `${API_BASE_URL}/api`
 
 /**
  * Get list of santri with pagination and filters
@@ -16,7 +18,7 @@ export const getSantriList = async (params = {}) => {
   if (params.kabupaten) queryParams.append('kabupaten', params.kabupaten)
   if (params.jenis_kelamin) queryParams.append('jenis_kelamin', params.jenis_kelamin)
 
-  const url = `${API_BASE_URL}/santri-pribadi?${queryParams}`
+  const url = `${API_ENDPOINT}/santri-pribadi?${queryParams}`
 
   console.group('🔍 API Call: Get Santri List')
   console.log('📤 Request URL:', url)
@@ -55,7 +57,7 @@ export const getSantriList = async (params = {}) => {
  * @returns {Promise}
  */
 export const getSantriDetail = async (id) => {
-  const url = `${API_BASE_URL}/santri-pribadi/${id}`
+  const url = `${API_ENDPOINT}/santri-pribadi/${id}`
 
   console.group('🔍 API Call: Get Santri Detail')
   console.log('📤 Request URL:', url)
@@ -104,7 +106,7 @@ export const createSantri = async (data, files = []) => {
     formData.append('foto_files', file)
   })
 
-  const url = `${API_BASE_URL}/santri-pribadi`
+  const url = `${API_ENDPOINT}/santri-pribadi`
 
   console.group('➕ API Call: Create Santri')
   console.log('📤 Request URL:', url)
@@ -246,7 +248,7 @@ export const addSantriPhotos = async (id, files) => {
     formData.append('foto_files', file)
   })
 
-  const url = `${API_BASE_URL}/santri-pribadi/${id}/photos`
+  const url = `${API_ENDPOINT}/santri-pribadi/${id}/photos`
 
   console.group('📸 API Call: Add Photos')
   console.log('📤 Request URL:', url)
@@ -287,7 +289,7 @@ export const addSantriPhotos = async (id, files) => {
  * @returns {Promise}
  */
 export const deleteSantriPhoto = async (fotoId) => {
-  const url = `${API_BASE_URL}/santri-pribadi/photos/${fotoId}`
+  const url = `${API_ENDPOINT}/santri-pribadi/photos/${fotoId}`
 
   console.group('🗑️ API Call: Delete Photo')
   console.log('📤 Request URL:', url)

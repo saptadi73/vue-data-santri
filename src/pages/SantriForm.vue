@@ -191,6 +191,109 @@
           </div>
         </div>
 
+        <!-- Pesantren Selection -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Pesantren Mondok</h2>
+          <div class="relative">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Pilih Pesantren <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-2">
+              <div class="flex-1 relative">
+                <input
+                  :value="pesantrenSearch"
+                  type="text"
+                  required
+                  :disabled="selectedPesantren !== null"
+                  @input="handlePesantrenSearch($event.target.value)"
+                  @focus="showPesantrenDropdown = true"
+                  placeholder="Ketik nama pesantren..."
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                />
+
+                <!-- Pesantren Dropdown -->
+                <div
+                  v-if="showPesantrenDropdown && pesantrenList.length > 0"
+                  class="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                >
+                  <div
+                    v-for="pesantren in pesantrenList"
+                    :key="pesantren.id"
+                    @click="selectPesantren(pesantren)"
+                    class="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0 transition"
+                  >
+                    <div class="font-medium text-gray-900 dark:text-white">
+                      {{ pesantren.nama }}
+                    </div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                      {{ pesantren.kabupaten }}, {{ pesantren.provinsi }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      NSP: {{ pesantren.nsp }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading indicator -->
+                <div
+                  v-if="showPesantrenDropdown && loadingPesantren && pesantrenList.length === 0"
+                  class="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4"
+                >
+                  <div class="text-center text-sm text-gray-600 dark:text-gray-400">
+                    Sedang memuat...
+                  </div>
+                </div>
+
+                <!-- No results -->
+                <div
+                  v-if="
+                    showPesantrenDropdown &&
+                    !loadingPesantren &&
+                    pesantrenSearch.trim() &&
+                    pesantrenList.length === 0
+                  "
+                  class="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4"
+                >
+                  <div class="text-center text-sm text-gray-600 dark:text-gray-400">
+                    Pesantren tidak ditemukan
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clear button -->
+              <button
+                v-if="selectedPesantren"
+                type="button"
+                @click="clearPesantrenSelection"
+                class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+              >
+                Ubah
+              </button>
+            </div>
+
+            <!-- Selected pesantren info -->
+            <div
+              v-if="selectedPesantren"
+              class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+            >
+              <div class="text-sm font-medium text-blue-900 dark:text-blue-200">
+                Pesantren Terpilih:
+              </div>
+              <div class="mt-2">
+                <div class="font-semibold text-gray-900 dark:text-white">
+                  {{ selectedPesantren.nama }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ selectedPesantren.kabupaten }}, {{ selectedPesantren.provinsi }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  NSP: {{ selectedPesantren.nsp }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Address Information -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Alamat</h2>
@@ -257,7 +360,7 @@
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">GPS Coordinates</h3>
             <button
               type="button"
-              @click="getCurrentLocation"
+              @click="getCurrentLocation()"
               :disabled="gettingLocation"
               class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
             >
@@ -404,6 +507,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createSantri } from '@/services/santriService'
+import { API_BASE_URL } from '@/utils/apiConfig'
 
 const router = useRouter()
 
@@ -422,6 +526,7 @@ const formData = ref({
   desa: '',
   latitude: null,
   longitude: null,
+  pesantren_id: null,
 })
 
 const selectedFiles = ref([])
@@ -430,6 +535,74 @@ const error = ref(null)
 const successMessage = ref(null)
 const gettingLocation = ref(false)
 const locationError = ref(null)
+const pesantrenList = ref([])
+const pesantrenSearch = ref('')
+const showPesantrenDropdown = ref(false)
+const selectedPesantren = ref(null)
+const loadingPesantren = ref(false)
+
+let searchTimeout = null
+
+// Fetch pesantren dropdown with search
+const fetchPesantrenList = async (query = '') => {
+  if (!query.trim()) {
+    pesantrenList.value = []
+    return
+  }
+
+  loadingPesantren.value = true
+  try {
+    const url = `${API_BASE_URL}/pondok-pesantren/dropdown?search=${encodeURIComponent(query)}`
+    console.log('🔍 Fetching pesantren:', url)
+
+    const response = await fetch(url)
+    console.log('📥 Response status:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ Error response:', errorText)
+      throw new Error(`HTTP ${response.status}: Failed to fetch pesantren list`)
+    }
+
+    pesantrenList.value = await response.json()
+    console.log('✅ Pesantren list:', pesantrenList.value)
+  } catch (err) {
+    console.error('❌ Error fetching pesantren:', err)
+    pesantrenList.value = []
+    // Optionally show error to user
+    // error.value = err.message
+  } finally {
+    loadingPesantren.value = false
+  }
+}
+
+// Handle pesantren search input with debounce
+const handlePesantrenSearch = (query) => {
+  pesantrenSearch.value = query
+  showPesantrenDropdown.value = true
+
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    fetchPesantrenList(query)
+  }, 300)
+}
+
+// Select pesantren from dropdown
+const selectPesantren = (pesantren) => {
+  selectedPesantren.value = pesantren
+  formData.value.pesantren_id = pesantren.id
+  pesantrenSearch.value = pesantren.nama
+  showPesantrenDropdown.value = false
+  pesantrenList.value = []
+}
+
+// Clear pesantren selection
+const clearPesantrenSelection = () => {
+  selectedPesantren.value = null
+  formData.value.pesantren_id = null
+  pesantrenSearch.value = ''
+  pesantrenList.value = []
+}
 
 // Get current GPS location
 const getCurrentLocation = () => {
@@ -441,6 +614,7 @@ const getCurrentLocation = () => {
   gettingLocation.value = true
   locationError.value = null
 
+  // First attempt with high accuracy
   navigator.geolocation.getCurrentPosition(
     (position) => {
       formData.value.latitude = parseFloat(position.coords.latitude.toFixed(6))
@@ -448,27 +622,44 @@ const getCurrentLocation = () => {
       gettingLocation.value = false
     },
     (error) => {
-      gettingLocation.value = false
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          locationError.value = 'Akses lokasi ditolak. Mohon izinkan akses lokasi di browser Anda.'
-          break
-        case error.POSITION_UNAVAILABLE:
-          locationError.value = 'Informasi lokasi tidak tersedia.'
-          break
-        case error.TIMEOUT:
-          locationError.value = 'Waktu permintaan lokasi habis.'
-          break
-        default:
-          locationError.value = 'Terjadi kesalahan saat mengambil lokasi.'
+      // If high accuracy times out, try with lower accuracy
+      if (error.code === error.TIMEOUT) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            formData.value.latitude = parseFloat(position.coords.latitude.toFixed(6))
+            formData.value.longitude = parseFloat(position.coords.longitude.toFixed(6))
+            gettingLocation.value = false
+            locationError.value = 'Lokasi didapat dengan akurasi standar (bukan presisi tinggi)'
+          },
+          (retryError) => {
+            gettingLocation.value = false
+            handleLocationError(retryError)
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
+        )
+      } else {
+        gettingLocation.value = false
+        handleLocationError(error)
       }
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
   )
+}
+
+const handleLocationError = (error) => {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      locationError.value = 'Akses lokasi ditolak. Mohon izinkan akses lokasi di browser Anda.'
+      break
+    case error.POSITION_UNAVAILABLE:
+      locationError.value = 'Informasi lokasi tidak tersedia.'
+      break
+    case error.TIMEOUT:
+      locationError.value = 'Waktu permintaan lokasi habis. Pastikan GPS aktif dan coba lagi.'
+      break
+    default:
+      locationError.value = 'Terjadi kesalahan saat mengambil lokasi.'
+  }
 }
 
 // Handle file selection
@@ -515,6 +706,29 @@ const removeFile = (index) => {
   selectedFiles.value.splice(index, 1)
 }
 
+// Promise-based one-time location fetch (used on submit if missing)
+const getCurrentLocationOnce = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation tidak didukung oleh browser Anda'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: parseFloat(position.coords.latitude.toFixed(6)),
+          longitude: parseFloat(position.coords.longitude.toFixed(6)),
+        })
+      },
+      (error) => {
+        reject(error)
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
+    )
+  })
+}
+
 // Handle form submission
 const handleSubmit = async () => {
   error.value = null
@@ -522,6 +736,23 @@ const handleSubmit = async () => {
   submitting.value = true
 
   try {
+    // If latitude/longitude are missing, try to fetch once before submit
+    if (
+      (formData.value.latitude === null || formData.value.longitude === null) &&
+      formData.value.status_tinggal === 'mondok'
+    ) {
+      try {
+        const coords = await getCurrentLocationOnce()
+        formData.value.latitude = coords.latitude
+        formData.value.longitude = coords.longitude
+      } catch (locErr) {
+        submitting.value = false
+        error.value =
+          'Lokasi belum diisi dan gagal diambil otomatis. Klik "Get GPS Coordinate" terlebih dahulu.'
+        return
+      }
+    }
+
     // Prepare files
     const files = selectedFiles.value.map((item) => item.file)
 

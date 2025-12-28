@@ -24,6 +24,21 @@ const router = createRouter({
       component: () => import('@/pages/SantriList.vue'),
     },
     {
+      path: '/pondok',
+      name: 'pondok-list',
+      component: () => import('@/pages/PondokList.vue'),
+    },
+    {
+      path: '/pondok/tambah',
+      name: 'pondok-add',
+      component: () => import('@/pages/PondokForm.vue'),
+    },
+    {
+      path: '/pondok/edit/:id',
+      name: 'pondok-edit',
+      component: () => import('@/pages/PondokForm.vue'),
+    },
+    {
       path: '/santri/tambah',
       name: 'santri-form',
       component: () => import('@/pages/SantriForm.vue'),

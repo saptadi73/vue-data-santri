@@ -345,7 +345,7 @@
                 class="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
               >
                 <img
-                  :src="getPhotoUrl(photo.url)"
+                  :src="getPhotoUrl(photo.url_photo)"
                   :alt="photo.nama_file"
                   class="w-full h-40 object-cover"
                 />
@@ -524,6 +524,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getSantriDetail, updateSantri, deleteSantriPhoto } from '@/services/santriService'
+import { API_BASE_URL } from '@/utils/apiConfig'
 
 const route = useRoute()
 const router = useRouter()
@@ -640,10 +641,16 @@ const getCurrentLocation = () => {
   )
 }
 
-// Get full photo URL
+// Get full photo URL with normalization (handles backslashes)
 const getPhotoUrl = (url) => {
-  // Assuming API returns relative URL
-  return `http://localhost:8000${url}`
+  if (!url) return ''
+  // Normalize backslashes to forward slashes
+  let normalized = url.replace(/\\/g, '/')
+  // If already absolute URL
+  if (/^https?:\/\//i.test(normalized)) return normalized
+  // Ensure leading slash
+  if (!normalized.startsWith('/')) normalized = `/${normalized}`
+  return `${API_BASE_URL}${normalized}`
 }
 
 // Handle file selection

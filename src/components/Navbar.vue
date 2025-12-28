@@ -183,18 +183,13 @@ onBeforeUnmount(() => {
             >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/pondok"
+                >Data Pondok</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
                 to="/santri"
                 >Data Santri</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#formulir-2"
-                >Formulir 2</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#formulir-3"
-                >Formulir 3</RouterLink
               >
             </div>
           </Transition>
@@ -401,20 +396,17 @@ onBeforeUnmount(() => {
               >
             </button>
             <div v-if="openDropdown === 'formulir'" class="space-y-1 px-3 pb-3">
-              <a
+              <RouterLink
                 class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#formulir-1"
-                >Formulir 1</a
+                to="/pondok"
+                @click="closeAll"
+                >Data Pondok</RouterLink
               >
-              <a
+              <RouterLink
                 class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#formulir-2"
-                >Formulir 2</a
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#formulir-3"
-                >Formulir 3</a
+                to="/santri"
+                @click="closeAll"
+                >Data Santri</RouterLink
               >
             </div>
           </div>
