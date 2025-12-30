@@ -59,6 +59,46 @@ const router = createRouter({
       component: () => import('@/pages/SantriOrangtuaForm.vue'),
     },
     {
+      path: '/santri/:santriId/asset/tambah',
+      name: 'santri-asset-add',
+      component: () => import('@/pages/SantriAssetForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/asset/edit/:assetId',
+      name: 'santri-asset-edit',
+      component: () => import('@/pages/SantriAssetForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/rumah/tambah',
+      name: 'santri-rumah-add',
+      component: () => import('@/pages/SantriRumahForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/rumah/edit/:rumahId',
+      name: 'santri-rumah-edit',
+      component: () => import('@/pages/SantriRumahForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/kesehatan/tambah',
+      name: 'santri-kesehatan-add',
+      component: () => import('@/pages/SantriKesehataanForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/kesehatan/edit/:kesehataanId',
+      name: 'santri-kesehatan-edit',
+      component: () => import('@/pages/SantriKesehataanForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/bansos/tambah',
+      name: 'santri-bansos-add',
+      component: () => import('@/pages/SantriBansosForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/bansos/edit/:bansosId',
+      name: 'santri-bansos-edit',
+      component: () => import('@/pages/SantriBansosForm.vue'),
+    },
+    {
       path: '/home',
       redirect: '/',
     },

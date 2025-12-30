@@ -163,7 +163,7 @@ export const updateSantri = async (id, data, files = []) => {
     formData.append('foto_files', file)
   })
 
-  const url = `${API_BASE_URL}/santri-pribadi/${id}`
+  const url = `${API_ENDPOINT}/santri-pribadi/${id}`
 
   console.group('✏️ API Call: Update Santri')
   console.log('📤 Request URL:', url)
@@ -205,7 +205,7 @@ export const updateSantri = async (id, data, files = []) => {
  * @returns {Promise}
  */
 export const deleteSantri = async (id) => {
-  const url = `${API_BASE_URL}/santri-pribadi/${id}`
+  const url = `${API_ENDPOINT}/santri-pribadi/${id}`
 
   console.group('🗑️ API Call: Delete Santri')
   console.log('📤 Request URL:', url)

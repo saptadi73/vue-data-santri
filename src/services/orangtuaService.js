@@ -54,32 +54,55 @@ export const getOrangtuaDetail = async (orangtuaId) => {
  */
 export const createOrangtua = async (orangtuaData) => {
   try {
-    const formData = new FormData()
+    // Always use FormData when files are present
+    const hasFiles =
+      orangtuaData.fotos && Array.isArray(orangtuaData.fotos) && orangtuaData.fotos.length > 0
 
-    // Add all form fields
-    Object.keys(orangtuaData).forEach((key) => {
-      if (key === 'fotos' && orangtuaData[key]) {
-        // Handle multiple photos
-        Array.from(orangtuaData[key]).forEach((file) => {
-          formData.append('fotos', file)
-        })
-      } else if (orangtuaData[key] !== null && orangtuaData[key] !== undefined) {
-        formData.append(key, orangtuaData[key])
+    if (hasFiles) {
+      const formData = new FormData()
+
+      // Add all form fields
+      Object.keys(orangtuaData).forEach((key) => {
+        if (key === 'fotos') {
+          // Handle multiple photos
+          orangtuaData.fotos.forEach((file) => {
+            formData.append('fotos', file)
+          })
+        } else if (orangtuaData[key] !== null && orangtuaData[key] !== undefined) {
+          formData.append(key, orangtuaData[key])
+        }
+      })
+
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal membuat data orangtua')
       }
-    })
 
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      body: formData,
-    })
+      return data
+    } else {
+      // Use JSON when no files
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orangtuaData),
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Gagal membuat data orangtua')
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal membuat data orangtua')
+      }
+
+      return data
     }
-
-    return data
   } catch (error) {
     console.error('Error creating orangtua:', error)
     throw error
@@ -91,27 +114,68 @@ export const createOrangtua = async (orangtuaData) => {
  */
 export const updateOrangtua = async (orangtuaId, orangtuaData) => {
   try {
-    const formData = new FormData()
+    // Check if has files to upload
+    const hasFiles =
+      orangtuaData.fotos && Array.isArray(orangtuaData.fotos) && orangtuaData.fotos.length > 0
 
-    // Add all form fields
-    Object.keys(orangtuaData).forEach((key) => {
-      if (orangtuaData[key] !== null && orangtuaData[key] !== undefined && key !== 'fotos') {
-        formData.append(key, orangtuaData[key])
-      }
-    })
-
-    const response = await fetch(`${API_ENDPOINT}/${orangtuaId}`, {
-      method: 'PUT',
-      body: formData,
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Gagal mengupdate data orangtua')
+    console.group('📝 Update Orangtua')
+    console.log('orangtuaId:', orangtuaId)
+    console.log('Has files:', hasFiles)
+    console.log('Fotos:', orangtuaData.fotos)
+    if (hasFiles) {
+      console.log('File details:')
+      orangtuaData.fotos.forEach((f, i) => {
+        console.log(`  [${i}]:`, f instanceof File ? `File: ${f.name} (${f.size} bytes)` : f)
+      })
     }
+    console.groupEnd()
 
-    return data
+    if (hasFiles) {
+      const formData = new FormData()
+
+      // Add all form fields
+      Object.keys(orangtuaData).forEach((key) => {
+        if (key === 'fotos') {
+          // Handle multiple photos
+          orangtuaData.fotos.forEach((file) => {
+            console.log('Appending file:', file.name)
+            formData.append('fotos', file)
+          })
+        } else if (orangtuaData[key] !== null && orangtuaData[key] !== undefined) {
+          formData.append(key, orangtuaData[key])
+        }
+      })
+
+      const response = await fetch(`${API_ENDPOINT}/${orangtuaId}`, {
+        method: 'PUT',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mengupdate data orangtua')
+      }
+
+      return data
+    } else {
+      // Use JSON when no files
+      const response = await fetch(`${API_ENDPOINT}/${orangtuaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orangtuaData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mengupdate data orangtua')
+      }
+
+      return data
+    }
   } catch (error) {
     console.error('Error updating orangtua:', error)
     throw error

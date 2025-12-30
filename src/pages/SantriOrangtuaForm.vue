@@ -231,14 +231,39 @@
             </div>
           </div>
 
-          <!-- Photo Upload (for new entries) -->
-          <div v-if="!isEditMode" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+          <!-- Photo Upload -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Foto Orang Tua/Wali
             </h2>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Upload foto (format: JPG, PNG, max 5MB per file, opsional)
             </p>
+
+            <!-- Existing Photos (Edit Mode) -->
+            <div v-if="isEditMode && existingPhotos.length > 0" class="mb-4">
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Foto yang sudah diupload ({{ existingPhotos.length }} foto)
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div
+                  v-for="(photo, index) in existingPhotos"
+                  :key="photo.id"
+                  class="relative group"
+                >
+                  <img
+                    :src="getPhotoUrl(photo.url_photo)"
+                    :alt="photo.nama_file"
+                    class="w-full h-32 object-cover rounded border-2 border-blue-300 dark:border-blue-600"
+                  />
+                  <div
+                    class="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded"
+                  >
+                    Existing
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- File Input -->
             <div class="mb-4">
@@ -332,6 +357,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createOrangtua, updateOrangtua, getOrangtuaDetail } from '@/services/orangtuaService'
+import { API_BASE_URL } from '@/utils/apiConfig'
 
 const route = useRoute()
 const router = useRouter()
@@ -360,6 +386,7 @@ const formData = ref({
 })
 
 const selectedFiles = ref([])
+const existingPhotos = ref([])
 
 // Load data if in edit mode
 onMounted(async () => {
@@ -388,12 +415,72 @@ const loadOrangtuaData = async () => {
         status_hidup: data.status_hidup || '',
         kontak_telepon: data.kontak_telepon || '',
       }
+
+      // Load existing photos
+      console.log('Raw foto_orangtua data:', data.foto_orangtua, 'Type:', typeof data.foto_orangtua)
+
+      if (data.foto_orangtua) {
+        let photosArray = []
+
+        // If foto_orangtua is a string, it might be a single tuple or comma-separated tuples
+        if (typeof data.foto_orangtua === 'string') {
+          // Check if it's a single tuple format: "(path,filename)"
+          const singleMatch = data.foto_orangtua.match(/^\(([^,]+),([^)]+)\)$/)
+          if (singleMatch) {
+            photosArray = [
+              {
+                url_photo: singleMatch[1].trim(),
+                nama_file: singleMatch[2].trim(),
+                id: Math.random().toString(36),
+              },
+            ]
+          }
+        }
+        // If it's an array
+        else if (Array.isArray(data.foto_orangtua) && data.foto_orangtua.length > 0) {
+          photosArray = data.foto_orangtua
+            .map((item) => {
+              // If already an object with url_photo, use it directly
+              if (typeof item === 'object' && item.url_photo) {
+                return item
+              }
+              // If it's a string tuple like "(path,filename)", parse it
+              if (typeof item === 'string') {
+                const match = item.match(/^\(([^,]+),([^)]+)\)$/)
+                if (match) {
+                  return {
+                    url_photo: match[1].trim(),
+                    nama_file: match[2].trim(),
+                    id: Math.random().toString(36),
+                  }
+                }
+              }
+              return item
+            })
+            .filter((item) => item && item.url_photo) // Filter out invalid items
+        }
+
+        console.log('Parsed photos:', photosArray)
+        existingPhotos.value = photosArray
+      }
     }
   } catch (err) {
     loadError.value = err.message || 'Gagal memuat data orangtua'
   } finally {
     loading.value = false
   }
+}
+
+// Get full photo URL with normalization (handles backslashes)
+const getPhotoUrl = (url) => {
+  if (!url) return ''
+  // Normalize backslashes to forward slashes
+  let normalized = url.replace(/\\/g, '/')
+  // If already absolute URL
+  if (/^https?:\/\//i.test(normalized)) return normalized
+  // Ensure leading slash
+  if (!normalized.startsWith('/')) normalized = `/${normalized}`
+  return `${API_BASE_URL}${normalized}`
 }
 
 const handleFileSelect = (event) => {
@@ -429,7 +516,8 @@ const handleSubmit = async () => {
   try {
     const dataToSubmit = { ...formData.value }
 
-    if (!isEditMode.value && selectedFiles.value.length > 0) {
+    // Add selected files if any (both create and edit mode)
+    if (selectedFiles.value.length > 0) {
       dataToSubmit.fotos = selectedFiles.value.map((f) => f.file)
     }
 
@@ -439,6 +527,9 @@ const handleSubmit = async () => {
     } else {
       response = await createOrangtua(dataToSubmit)
     }
+
+    console.log('📥 Response from API:', response)
+    console.log('📸 foto_orangtua in response:', response?.data?.foto_orangtua)
 
     if (response.success) {
       successMessage.value = isEditMode.value
