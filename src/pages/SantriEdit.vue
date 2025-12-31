@@ -529,7 +529,7 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0z"
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-2a6 6 0 0112 0v2zm0 0h6v-2a6 6 0 00-9-5.697"
                     />
                   </svg>
                   {{
@@ -834,6 +834,79 @@
               </div>
             </div>
           </div>
+
+          <!-- Next Step: Pembiayaan Data -->
+          <div
+            class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6"
+          >
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <svg
+                  class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
+                  Data Pembiayaan
+                </h3>
+                <p class="text-indigo-800 dark:text-indigo-300 mb-2">
+                  Lengkapi informasi pembiayaan pendidikan santri.
+                </p>
+                <p
+                  v-if="checkingPembiayaan"
+                  class="text-sm text-indigo-700 dark:text-indigo-200 mb-4"
+                >
+                  Memeriksa keberadaan data pembiayaan...
+                </p>
+                <p v-else class="text-sm text-indigo-800 dark:text-indigo-200 mb-4">
+                  {{
+                    pembiayaanExists
+                      ? 'Data pembiayaan ditemukan. Klik untuk mengelola.'
+                      : 'Belum ada data pembiayaan. Klik untuk menambahkan.'
+                  }}
+                </p>
+                <router-link
+                  :to="`/santri/${santriId}/pembiayaan`"
+                  :class="[
+                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
+                    checkingPembiayaan
+                      ? 'bg-indigo-300 text-white cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white',
+                  ]"
+                  :aria-disabled="checkingPembiayaan"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {{
+                    checkingPembiayaan
+                      ? 'Memuat...'
+                      : pembiayaanExists
+                        ? 'Kelola Data Pembiayaan'
+                        : 'Isi Data Pembiayaan'
+                  }}
+                </router-link>
+                <p v-if="pembiayaanCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                  {{ pembiayaanCheckError }}
+                </p>
+              </div>
+            </div>
+          </div>
         </form>
       </template>
     </div>
@@ -940,6 +1013,7 @@ import { getSantriAssets } from '@/services/santriAssetService'
 import { getRumahBySantri } from '@/services/santriRumahService'
 import { getKesehataanBySantri } from '@/services/santriKesehataanService'
 import { getBansosBySantri } from '@/services/santriBansosService'
+import { getPembiayaanBySantri } from '@/services/santriPembiayaanService'
 import { API_BASE_URL } from '@/utils/apiConfig'
 
 const route = useRoute()
@@ -974,6 +1048,10 @@ const checkingBansos = ref(false)
 const bansosExists = ref(false)
 const bansosId = ref(null)
 const bansosCheckError = ref(null)
+const checkingPembiayaan = ref(false)
+const pembiayaanExists = ref(false)
+const pembiayaanId = ref(null)
+const pembiayaanCheckError = ref(null)
 
 const formData = ref({
   nama: '',
@@ -1308,6 +1386,27 @@ const checkBansosStatus = async () => {
   }
 }
 
+const checkPembiayaanStatus = async () => {
+  checkingPembiayaan.value = true
+  pembiayaanCheckError.value = null
+
+  try {
+    const response = await getPembiayaanBySantri(santriId)
+
+    if (response.success && response.data) {
+      pembiayaanExists.value = true
+      pembiayaanId.value = response.data.id
+    } else {
+      pembiayaanExists.value = false
+      pembiayaanId.value = null
+    }
+  } catch (err) {
+    pembiayaanCheckError.value = err.message || 'Gagal memeriksa data pembiayaan'
+  } finally {
+    checkingPembiayaan.value = false
+  }
+}
+
 onMounted(() => {
   loadSantriData()
   checkOrangtuaStatus()
@@ -1315,5 +1414,6 @@ onMounted(() => {
   checkRumahStatus()
   checkKesehataanStatus()
   checkBansosStatus()
+  checkPembiayaanStatus()
 })
 </script>

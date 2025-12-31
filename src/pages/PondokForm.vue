@@ -491,14 +491,244 @@
           </button>
         </div>
       </form>
+
+      <!-- Data Infrastruktur Fisik Section (only in edit mode) -->
+      <div
+        v-if="isEdit"
+        class="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
+      >
+        <div class="flex items-start gap-4">
+          <div class="shrink-0">
+            <svg
+              class="h-6 w-6 text-blue-600 dark:text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+              Data Infrastruktur Fisik
+            </h3>
+            <p class="text-blue-800 dark:text-blue-300 mb-2">
+              Lengkapi informasi infrastruktur fisik pesantren untuk pemantauan kondisi bangunan.
+            </p>
+            <p v-if="checkingFisik" class="text-sm text-blue-700 dark:text-blue-200 mb-4">
+              Memeriksa keberadaan data infrastruktur fisik...
+            </p>
+            <p v-else class="text-sm text-blue-800 dark:text-blue-200 mb-4">
+              {{
+                fisikExists
+                  ? 'Data infrastruktur fisik ditemukan. Klik untuk mengedit.'
+                  : 'Belum ada data infrastruktur fisik. Klik untuk menambahkan.'
+              }}
+            </p>
+            <router-link
+              :to="
+                fisikExists
+                  ? `/pesantren/${route.params.id}/fisik/edit/${fisikId}`
+                  : `/pesantren/${route.params.id}/fisik/add`
+              "
+              :class="[
+                'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
+                checkingFisik
+                  ? 'bg-blue-300 text-white cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white',
+              ]"
+              :aria-disabled="checkingFisik"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+              {{
+                checkingFisik
+                  ? 'Memuat...'
+                  : fisikExists
+                    ? 'Kelola Data Fisik'
+                    : 'Tambah Data Fisik'
+              }}
+            </router-link>
+            <p v-if="fisikCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+              {{ fisikCheckError }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pendidikan Section (Edit mode only) -->
+      <div v-if="isEdit" class="mt-8">
+        <div
+          class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
+        >
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <svg
+                class="h-6 w-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C6.228 6.253 2.092 10.814 2.092 16.35c0 5.536 4.136 10.097 9.908 10.097S21.908 21.886 21.908 16.35c0-5.536-4.136-10.097-9.908-10.097z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+                Data Pendidikan
+              </h3>
+              <p class="text-blue-800 dark:text-blue-300 mb-2">
+                Lengkapi informasi pendidikan pesantren untuk pemantauan kualitas akademik.
+              </p>
+              <p v-if="checkingPendidikan" class="text-sm text-blue-700 dark:text-blue-200 mb-4">
+                Memeriksa keberadaan data pendidikan...
+              </p>
+              <p v-else class="text-sm text-blue-800 dark:text-blue-200 mb-4">
+                {{
+                  pendidikanExists
+                    ? 'Data pendidikan ditemukan. Klik untuk mengedit.'
+                    : 'Belum ada data pendidikan. Klik untuk menambahkan.'
+                }}
+              </p>
+              <router-link
+                :to="
+                  pendidikanExists
+                    ? `/pesantren/${route.params.id}/pendidikan/edit/${pendidikanId}`
+                    : `/pesantren/${route.params.id}/pendidikan/add`
+                "
+                :class="[
+                  'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
+                  checkingPendidikan
+                    ? 'bg-blue-300 text-white cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white',
+                ]"
+                :aria-disabled="checkingPendidikan"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.253v13m0-13C6.228 6.253 2.092 10.814 2.092 16.35c0 5.536 4.136 10.097 9.908 10.097S21.908 21.886 21.908 16.35c0-5.536-4.136-10.097-9.908-10.097z"
+                  />
+                </svg>
+                {{
+                  checkingPendidikan
+                    ? 'Memuat...'
+                    : pendidikanExists
+                      ? 'Kelola Data Pendidikan'
+                      : 'Tambah Data Pendidikan'
+                }}
+              </router-link>
+              <p v-if="pendidikanCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                {{ pendidikanCheckError }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fasilitas Section (Edit mode only) -->
+      <div v-if="isEdit" class="mt-8">
+        <div
+          class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
+        >
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <svg
+                class="h-6 w-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+                Data Fasilitas
+              </h3>
+              <p class="text-blue-800 dark:text-blue-300 mb-2">
+                Lengkapi informasi fasilitas pesantren untuk pemantauan sarana dan prasarana.
+              </p>
+              <p v-if="checkingFasilitas" class="text-sm text-blue-700 dark:text-blue-200 mb-4">
+                Memeriksa keberadaan data fasilitas...
+              </p>
+              <p v-else class="text-sm text-blue-800 dark:text-blue-200 mb-4">
+                {{
+                  fasilitasExists
+                    ? 'Data fasilitas ditemukan. Klik untuk mengedit.'
+                    : 'Belum ada data fasilitas. Klik untuk menambahkan.'
+                }}
+              </p>
+              <router-link
+                :to="
+                  fasilitasExists
+                    ? `/pesantren/${route.params.id}/fasilitas/edit/${fasilitasId}`
+                    : `/pesantren/${route.params.id}/fasilitas/add`
+                "
+                :class="[
+                  'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
+                  checkingFasilitas
+                    ? 'bg-blue-300 text-white cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white',
+                ]"
+                :aria-disabled="checkingFasilitas"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+                {{
+                  checkingFasilitas
+                    ? 'Memuat...'
+                    : fasilitasExists
+                      ? 'Kelola Data Fasilitas'
+                      : 'Tambah Data Fasilitas'
+                }}
+              </router-link>
+              <p v-if="fasilitasCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                {{ fasilitasCheckError }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createPondok, getPondokDetail, updatePondok } from '@/services/pondokPesantrenService'
+import { getFisikByPesantren } from '@/services/pesantrenFisikService'
+import { getPendidikanByPesantren } from '@/services/pesantrenPendidikanService'
+import { getFasilitasByPesantren } from '@/services/pesantrenFasilitasService'
 import { API_BASE_URL } from '@/utils/apiConfig'
 
 const router = useRouter()
@@ -538,6 +768,18 @@ const loadingDetail = ref(false)
 const submitting = ref(false)
 const gettingLocation = ref(false)
 const locationError = ref('')
+const checkingFisik = ref(false)
+const fisikExists = ref(false)
+const fisikId = ref(null)
+const fisikCheckError = ref(null)
+const checkingPendidikan = ref(false)
+const pendidikanExists = ref(false)
+const pendidikanId = ref(null)
+const pendidikanCheckError = ref(null)
+const checkingFasilitas = ref(false)
+const fasilitasExists = ref(false)
+const fasilitasId = ref(null)
+const fasilitasCheckError = ref(null)
 
 const revokePreview = (fileObj) => {
   if (fileObj?.preview) URL.revokeObjectURL(fileObj.preview)
@@ -720,8 +962,115 @@ const handleLocationError = (geoError) => {
   else locationError.value = geoError?.message || 'Gagal mengambil lokasi.'
 }
 
+const checkFisikStatus = async () => {
+  if (!isEdit.value) return
+
+  checkingFisik.value = true
+  fisikCheckError.value = null
+
+  try {
+    console.log('🏗️ Checking fisik status for pesantren:', route.params.id)
+    const response = await getFisikByPesantren(route.params.id)
+    console.log('🏗️ Fisik response:', response)
+
+    // Check apakah response memiliki id field (data fisik ditemukan)
+    if (response && response.id) {
+      fisikExists.value = true
+      fisikId.value = response.id
+      console.log('✅ Fisik data found! ID:', response.id)
+    } else {
+      fisikExists.value = false
+      fisikId.value = null
+      console.log('❌ No fisik data found')
+    }
+  } catch (err) {
+    console.error('❌ Error checking fisik:', err)
+    fisikCheckError.value = err.message || 'Gagal memeriksa data infrastruktur fisik'
+  } finally {
+    checkingFisik.value = false
+  }
+}
+
+const checkPendidikanStatus = async () => {
+  if (!isEdit.value) return
+
+  checkingPendidikan.value = true
+  pendidikanCheckError.value = null
+
+  try {
+    console.log('📚 Checking pendidikan status for pesantren:', route.params.id)
+    const response = await getPendidikanByPesantren(route.params.id)
+    console.log('📚 Pendidikan response:', response)
+
+    // Check apakah response memiliki id field (data pendidikan ditemukan)
+    if (response && response.id) {
+      pendidikanExists.value = true
+      pendidikanId.value = response.id
+      console.log('✅ Pendidikan data found! ID:', response.id)
+    } else {
+      pendidikanExists.value = false
+      pendidikanId.value = null
+      console.log('❌ No pendidikan data found')
+    }
+  } catch (err) {
+    console.warn('⚠️ Warning checking pendidikan:', err)
+    // Don't set error - endpoint may not be available yet
+    pendidikanExists.value = false
+    pendidikanId.value = null
+  } finally {
+    checkingPendidikan.value = false
+  }
+}
+
+const checkFasilitasStatus = async () => {
+  if (!isEdit.value) return
+
+  checkingFasilitas.value = true
+  fasilitasCheckError.value = null
+
+  try {
+    console.log('🏢 Checking fasilitas status for pesantren:', route.params.id)
+    const response = await getFasilitasByPesantren(route.params.id)
+    console.log('🏢 Fasilitas response:', response)
+
+    // Check apakah response memiliki id field (data fasilitas ditemukan)
+    if (response && response.id) {
+      fasilitasExists.value = true
+      fasilitasId.value = response.id
+      console.log('✅ Fasilitas data found! ID:', response.id)
+    } else {
+      fasilitasExists.value = false
+      fasilitasId.value = null
+      console.log('❌ No fasilitas data found')
+    }
+  } catch (err) {
+    console.warn('⚠️ Warning checking fasilitas:', err)
+    // Don't set error - endpoint may not be available yet
+    fasilitasExists.value = false
+    fasilitasId.value = null
+  } finally {
+    checkingFasilitas.value = false
+  }
+}
+
+// Trigger check setiap kali kembali ke halaman ini
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId && isEdit.value) {
+      checkFisikStatus()
+      checkPendidikanStatus()
+      checkFasilitasStatus()
+    }
+  },
+  { flush: 'post' },
+)
+
 onMounted(() => {
   loadDetail()
+  checkFisikStatus()
+  checkPendidikanStatus()
+  checkFasilitasStatus()
 })
 
 onUnmounted(() => {

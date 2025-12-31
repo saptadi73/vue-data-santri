@@ -99,18 +99,6 @@
                 >
               </label>
 
-              <!-- BLT -->
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input
-                  v-model="formData.blt"
-                  type="checkbox"
-                  class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
-                />
-                <span class="text-gray-700 dark:text-gray-300 font-medium"
-                  >BLT (Bantuan Langsung Tunai)</span
-                >
-              </label>
-
               <!-- BPNT -->
               <label class="flex items-center gap-3 cursor-pointer">
                 <input
@@ -123,60 +111,40 @@
                 >
               </label>
 
-              <!-- Kartu Keluarga Sejahtera -->
+              <!-- PIP -->
               <label class="flex items-center gap-3 cursor-pointer">
                 <input
-                  v-model="formData.kartu_keluarga_sejahtera"
+                  v-model="formData.pip"
+                  type="checkbox"
+                  class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <span class="text-gray-700 dark:text-gray-300 font-medium"
+                  >PIP (Program Insentif Peserta Didik)</span
+                >
+              </label>
+
+              <!-- KIS/PBI -->
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                  v-model="formData.kis_pbi"
                   type="checkbox"
                   class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
                 />
                 <span class="text-gray-700 dark:text-gray-300 font-medium">
-                  Kartu Keluarga Sejahtera (KKS)
+                  KIS/PBI (Kartu Indonesia Sehat - Penerima Bantuan Iuran)
                 </span>
               </label>
 
-              <!-- Raskin -->
+              <!-- BLT Desa -->
               <label class="flex items-center gap-3 cursor-pointer">
                 <input
-                  v-model="formData.raskin"
+                  v-model="formData.blt_desa"
                   type="checkbox"
                   class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
                 />
                 <span class="text-gray-700 dark:text-gray-300 font-medium">
-                  Raskin (Beras untuk Keluarga Miskin)
+                  BLT Desa (Bantuan Langsung Tunai Desa)
                 </span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Program Beasiswa -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Program Beasiswa
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Pilih jenis beasiswa yang diterima santri
-            </p>
-
-            <div class="space-y-3">
-              <!-- Beasiswa Penuh -->
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input
-                  v-model="formData.beasiswa_penuh"
-                  type="checkbox"
-                  class="w-4 h-4 text-green-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500"
-                />
-                <span class="text-gray-700 dark:text-gray-300 font-medium">Beasiswa Penuh</span>
-              </label>
-
-              <!-- Beasiswa Sebagian -->
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input
-                  v-model="formData.beasiswa_sebagian"
-                  type="checkbox"
-                  class="w-4 h-4 text-green-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500"
-                />
-                <span class="text-gray-700 dark:text-gray-300 font-medium">Beasiswa Sebagian</span>
               </label>
             </div>
           </div>
@@ -266,12 +234,10 @@ const successMessage = ref(null)
 const formData = ref({
   santri_id: santriId,
   pkh: false,
-  blt: false,
   bpnt: false,
-  kartu_keluarga_sejahtera: false,
-  raskin: false,
-  beasiswa_penuh: false,
-  beasiswa_sebagian: false,
+  pip: false,
+  kis_pbi: false,
+  blt_desa: false,
   bantuan_lainnya: '',
 })
 
@@ -293,12 +259,10 @@ const loadBansosData = async () => {
       formData.value = {
         santri_id: data.santri_id,
         pkh: data.pkh || false,
-        blt: data.blt || false,
         bpnt: data.bpnt || false,
-        kartu_keluarga_sejahtera: data.kartu_keluarga_sejahtera || false,
-        raskin: data.raskin || false,
-        beasiswa_penuh: data.beasiswa_penuh || false,
-        beasiswa_sebagian: data.beasiswa_sebagian || false,
+        pip: data.pip || false,
+        kis_pbi: data.kis_pbi || false,
+        blt_desa: data.blt_desa || false,
         bantuan_lainnya: data.bantuan_lainnya || '',
       }
     }
@@ -317,12 +281,10 @@ const handleSubmit = async () => {
   const payload = {
     santri_id: formData.value.santri_id,
     pkh: formData.value.pkh,
-    blt: formData.value.blt,
     bpnt: formData.value.bpnt,
-    kartu_keluarga_sejahtera: formData.value.kartu_keluarga_sejahtera,
-    raskin: formData.value.raskin,
-    beasiswa_penuh: formData.value.beasiswa_penuh,
-    beasiswa_sebagian: formData.value.beasiswa_sebagian,
+    pip: formData.value.pip,
+    kis_pbi: formData.value.kis_pbi,
+    blt_desa: formData.value.blt_desa,
     bantuan_lainnya: formData.value.bantuan_lainnya || null,
   }
 

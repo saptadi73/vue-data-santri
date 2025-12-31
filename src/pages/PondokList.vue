@@ -36,20 +36,27 @@
           </div>
 
           <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-            <input
+            <select
               v-model="filters.provinsi"
               @change="applyFilters"
-              type="text"
-              placeholder="Filter provinsi"
               class="w-full md:w-48 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-            <input
+            >
+              <option value="">Semua Provinsi</option>
+              <option v-for="prov in provinsiList" :key="prov" :value="prov">
+                {{ prov }}
+              </option>
+            </select>
+            <select
               v-model="filters.kabupaten"
               @change="applyFilters"
-              type="text"
-              placeholder="Filter kabupaten"
               class="w-full md:w-48 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
+              :disabled="!filters.provinsi"
+            >
+              <option value="">Semua Kabupaten</option>
+              <option v-for="kab in filteredKabupatenList" :key="kab" :value="kab">
+                {{ kab }}
+              </option>
+            </select>
             <router-link
               to="/pondok/tambah"
               class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap"
@@ -200,7 +207,7 @@
                   <div class="flex justify-end gap-2">
                     <router-link
                       :to="`/pondok/edit/${pondok.id}`"
-                      class="text-blue-600 hover:text-blue-900"
+                      class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       title="Edit"
                     >
                       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +221,7 @@
                     </router-link>
                     <button
                       @click="confirmDelete(pondok)"
-                      class="text-red-600 hover:text-red-900"
+                      class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                       title="Hapus"
                     >
                       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,7 +350,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { deletePondok, getPondokList } from '@/services/pondokPesantrenService'
 
 const pondokList = ref([])
@@ -351,6 +358,8 @@ const loading = ref(false)
 const error = ref(null)
 const searchQuery = ref('')
 const filters = ref({ provinsi: '', kabupaten: '' })
+const provinsiList = ref([])
+const kabupatenMap = ref({})
 
 const pagination = ref({
   page: 1,
@@ -379,6 +388,11 @@ const visiblePages = computed(() => {
   return pages
 })
 
+const filteredKabupatenList = computed(() => {
+  if (!filters.value.provinsi) return []
+  return kabupatenMap.value[filters.value.provinsi] || []
+})
+
 const loadPondokData = async () => {
   loading.value = true
   error.value = null
@@ -403,6 +417,9 @@ const loadPondokData = async () => {
       total: Number(pageInfo.total) || 0,
       total_pages: Number(pageInfo.total_pages) || 1,
     }
+
+    // Extract unique provinsi and kabupaten from all loaded data
+    extractProvinsiKabupaten(items)
   } catch (err) {
     error.value = err.message || 'Gagal memuat data pondok pesantren.'
     pondokList.value = []
@@ -410,6 +427,38 @@ const loadPondokData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const extractProvinsiKabupaten = (items) => {
+  const provSet = new Set()
+  const kabMap = {}
+
+  items.forEach((pondok) => {
+    if (pondok.provinsi) {
+      provSet.add(pondok.provinsi)
+
+      if (!kabMap[pondok.provinsi]) {
+        kabMap[pondok.provinsi] = new Set()
+      }
+
+      if (pondok.kabupaten) {
+        kabMap[pondok.provinsi].add(pondok.kabupaten)
+      }
+    }
+  })
+
+  // Convert sets to sorted arrays
+  provinsiList.value = Array.from(provSet).sort()
+  const convertedMap = {}
+  Object.keys(kabMap).forEach((prov) => {
+    convertedMap[prov] = Array.from(kabMap[prov]).sort()
+  })
+  kabupatenMap.value = convertedMap
+
+  console.log('📍 Provinsi & Kabupaten Extracted:', {
+    provinsiList: provinsiList.value,
+    kabupatenMap: kabupatenMap.value,
+  })
 }
 
 const handleSearch = () => {
@@ -424,6 +473,14 @@ const applyFilters = () => {
   pagination.value.page = 1
   loadPondokData()
 }
+
+// Reset kabupaten filter when provinsi changes
+watch(
+  () => filters.value.provinsi,
+  () => {
+    filters.value.kabupaten = ''
+  },
+)
 
 const goToPage = (page) => {
   if (page >= 1 && page <= pagination.value.total_pages) {

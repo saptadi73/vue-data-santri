@@ -39,6 +39,17 @@
           <!-- Filters & Add Button -->
           <div class="flex gap-3 w-full md:w-auto">
             <select
+              v-model="filters.provinsi"
+              @change="loadSantriData"
+              class="border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">Semua Provinsi</option>
+              <option v-for="prov in provinsiList" :key="prov.code" :value="prov.name">
+                {{ prov.name }}
+              </option>
+            </select>
+
+            <select
               v-model="filters.jenis_kelamin"
               @change="loadSantriData"
               class="border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -373,7 +384,9 @@ const santriList = ref([])
 const loading = ref(false)
 const error = ref(null)
 const searchQuery = ref('')
+const provinsiList = ref([])
 const filters = ref({
+  provinsi: '',
   jenis_kelamin: '',
 })
 
@@ -424,6 +437,10 @@ const loadSantriData = async () => {
 
     if (searchQuery.value) {
       params.search = searchQuery.value
+    }
+
+    if (filters.value.provinsi) {
+      params.provinsi = filters.value.provinsi
     }
 
     if (filters.value.jenis_kelamin) {
@@ -506,7 +523,54 @@ const handleDelete = async () => {
   }
 }
 
+// Load provinsi list from backend API
+const loadProvinsiList = async () => {
+  try {
+    const provinsiSet = new Set()
+    let page = 1
+    let hasMoreData = true
+
+    // Fetch all pages to get all unique provinsi
+    while (hasMoreData) {
+      const response = await getSantriList({ page, per_page: 100 })
+
+      console.log(`📍 Response halaman ${page}:`, response)
+
+      if (response && response.success && response.data) {
+        response.data.forEach((santri) => {
+          console.log('Santri:', santri.nama, '- Provinsi:', santri.provinsi)
+          if (santri.provinsi) {
+            provinsiSet.add(santri.provinsi)
+          }
+        })
+
+        // Check if there are more pages
+        if (response.pagination) {
+          hasMoreData = page < response.pagination.total_pages
+          page++
+        } else {
+          hasMoreData = false
+        }
+      } else {
+        console.warn('⚠️ Response tidak valid atau tidak ada data')
+        hasMoreData = false
+      }
+    }
+
+    console.log('📋 Daftar provinsi unik:', Array.from(provinsiSet))
+
+    provinsiList.value = Array.from(provinsiSet)
+      .sort()
+      .map((name) => ({ name, code: name }))
+
+    console.log('✅ ProvinsiList final:', provinsiList.value)
+  } catch (err) {
+    console.error('❌ Error loading provinsi list:', err)
+  }
+}
+
 onMounted(() => {
+  loadProvinsiList()
   loadSantriData()
 })
 </script>

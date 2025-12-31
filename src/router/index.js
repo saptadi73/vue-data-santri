@@ -99,6 +99,66 @@ const router = createRouter({
       component: () => import('@/pages/SantriBansosForm.vue'),
     },
     {
+      path: '/santri/:santriId/pembiayaan',
+      name: 'santri-pembiayaan',
+      component: () => import('@/pages/SantriPembiayaan.vue'),
+    },
+    {
+      path: '/santri/:santriId/pembiayaan/add',
+      name: 'santri-pembiayaan-add',
+      component: () => import('@/pages/SantriPembiayaanForm.vue'),
+    },
+    {
+      path: '/santri/:santriId/pembiayaan/edit/:pembiayaanId',
+      name: 'santri-pembiayaan-edit',
+      component: () => import('@/pages/SantriPembiayaanForm.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/fisik',
+      name: 'pesantren-fisik',
+      component: () => import('@/pages/PesantrenFisik.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/fisik/add',
+      name: 'pesantren-fisik-add',
+      component: () => import('@/pages/PesantrenFisikForm.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/fisik/edit/:fisikId',
+      name: 'pesantren-fisik-edit',
+      component: () => import('@/pages/PesantrenFisikForm.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/pendidikan',
+      name: 'pesantren-pendidikan',
+      component: () => import('@/pages/PesantrenPendidikan.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/pendidikan/add',
+      name: 'pesantren-pendidikan-add',
+      component: () => import('@/pages/PesantrenPendidikanForm.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/pendidikan/edit/:pendidikanId',
+      name: 'pesantren-pendidikan-edit',
+      component: () => import('@/pages/PesantrenPendidikanForm.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/fasilitas',
+      name: 'pesantren-fasilitas',
+      component: () => import('@/pages/PesantrenFasilitas.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/fasilitas/add',
+      name: 'pesantren-fasilitas-add',
+      component: () => import('@/pages/PesantrenFasilitasForm.vue'),
+    },
+    {
+      path: '/pesantren/:pesantrenId/fasilitas/edit/:fasilitasId',
+      name: 'pesantren-fasilitas-edit',
+      component: () => import('@/pages/PesantrenFasilitasForm.vue'),
+    },
+    {
       path: '/home',
       redirect: '/',
     },

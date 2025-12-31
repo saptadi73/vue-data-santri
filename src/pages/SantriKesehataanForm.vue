@@ -118,66 +118,48 @@
             </div>
           </div>
 
-          <!-- Golongan Darah & Vaksin -->
+          <!-- Status Gizi & Alergi Obat -->
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Golongan Darah & Vaksinasi
+              Status Gizi & Alergi
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Golongan Darah -->
+              <!-- Status Gizi -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Golongan Darah <span class="text-red-500">*</span>
+                  Status Gizi
                 </label>
                 <select
-                  v-model="formData.golongan_darah"
-                  required
+                  v-model="formData.status_gizi"
                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="">Pilih Golongan Darah</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="AB">AB</option>
-                  <option value="O">O</option>
+                  <option value="">Pilih Status Gizi</option>
+                  <option value="kurang">Kurang</option>
+                  <option value="baik">Baik</option>
+                  <option value="lebih">Lebih</option>
+                  <option value="obesitas">Obesitas</option>
                 </select>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Status gizi berdasarkan IMT dan pengukuran kesehatan
+                </p>
               </div>
 
-              <!-- Status Vaksin -->
+              <!-- Alergi Obat -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Status Vaksin <span class="text-red-500">*</span>
+                  Alergi Obat
                 </label>
-                <select
-                  v-model="formData.status_vaksin"
-                  required
-                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value="">Pilih Status Vaksin</option>
-                  <option value="belum">Belum Vaksin</option>
-                  <option value="sebagian">Sebagian</option>
-                  <option value="lengkap">Lengkap</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- BPJS & Asuransi -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Status BPJS</h2>
-
-            <div>
-              <label class="flex items-center gap-3 cursor-pointer">
                 <input
-                  v-model="formData.bpjs_aktif"
-                  type="checkbox"
-                  class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                  v-model="formData.alergi_obat"
+                  type="text"
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Contoh: Amoksisilin, Penisilin"
                 />
-                <span class="text-gray-700 dark:text-gray-300"> BPJS Kesehatan Aktif </span>
-              </label>
-              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Centang jika santri memiliki kartu BPJS Kesehatan yang masih aktif
-              </p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Tuliskan nama obat yang menimbulkan alergi (jika ada)
+                </p>
+              </div>
             </div>
           </div>
 
@@ -290,9 +272,8 @@ const formData = ref({
   santri_id: santriId,
   tinggi_badan: null,
   berat_badan: null,
-  golongan_darah: '',
-  status_vaksin: '',
-  bpjs_aktif: false,
+  status_gizi: '',
+  alergi_obat: '',
   riwayat_penyakit: '',
   kebutuhan_khusus: '',
 })
@@ -309,21 +290,28 @@ const loadKesehataanData = async () => {
 
   try {
     const response = await getKesehataanDetail(kesehataanId)
+    console.log('🏥 Raw response from API:', response)
 
     if (response.success && response.data) {
       const data = response.data
+      console.log('📋 Kesehatan data received:', data)
+
       formData.value = {
         santri_id: data.santri_id,
         tinggi_badan: data.tinggi_badan || null,
         berat_badan: data.berat_badan || null,
-        golongan_darah: data.golongan_darah || '',
-        status_vaksin: data.status_vaksin || '',
-        bpjs_aktif: data.bpjs_aktif || false,
+        status_gizi: data.status_gizi || '',
+        alergi_obat: data.alergi_obat || '',
         riwayat_penyakit: data.riwayat_penyakit || '',
         kebutuhan_khusus: data.kebutuhan_khusus || '',
       }
+
+      console.log('✅ Form data after loading:', formData.value)
+    } else {
+      console.warn('⚠️ No data received or response not successful')
     }
   } catch (err) {
+    console.error('❌ Error loading kesehatan:', err)
     error.value = err.message || 'Gagal memuat data kesehatan'
   } finally {
     loading.value = false
@@ -339,9 +327,8 @@ const handleSubmit = async () => {
     santri_id: formData.value.santri_id,
     tinggi_badan: formData.value.tinggi_badan,
     berat_badan: formData.value.berat_badan,
-    golongan_darah: formData.value.golongan_darah,
-    status_vaksin: formData.value.status_vaksin,
-    bpjs_aktif: formData.value.bpjs_aktif,
+    status_gizi: formData.value.status_gizi || null,
+    alergi_obat: formData.value.alergi_obat || null,
     riwayat_penyakit: formData.value.riwayat_penyakit || null,
     kebutuhan_khusus: formData.value.kebutuhan_khusus || null,
   }
