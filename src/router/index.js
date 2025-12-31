@@ -19,6 +19,16 @@ const router = createRouter({
       component: () => import('@/pages/SantriMap.vue'),
     },
     {
+      path: '/peta-pesantren',
+      name: 'peta-pesantren',
+      component: () => import('@/pages/PesantrenMap.vue'),
+    },
+    {
+      path: '/backend-debug',
+      name: 'backend-debug',
+      component: () => import('@/pages/BackendDebug.vue'),
+    },
+    {
       path: '/santri',
       name: 'santri-list',
       component: () => import('@/pages/SantriList.vue'),
@@ -99,6 +109,11 @@ const router = createRouter({
       component: () => import('@/pages/SantriBansosForm.vue'),
     },
     {
+      path: '/santri/:id/scoring',
+      name: 'santri-scoring',
+      component: () => import('@/pages/SantriScoring.vue'),
+    },
+    {
       path: '/santri/:santriId/pembiayaan',
       name: 'santri-pembiayaan',
       component: () => import('@/pages/SantriPembiayaan.vue'),
@@ -157,6 +172,11 @@ const router = createRouter({
       path: '/pesantren/:pesantrenId/fasilitas/edit/:fasilitasId',
       name: 'pesantren-fasilitas-edit',
       component: () => import('@/pages/PesantrenFasilitasForm.vue'),
+    },
+    {
+      path: '/pondok/:id/scoring',
+      name: 'pesantren-scoring',
+      component: () => import('@/pages/PesantrenScoring.vue'),
     },
     {
       path: '/home',

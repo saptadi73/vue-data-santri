@@ -472,203 +472,168 @@
             </button>
           </div>
 
-          <!-- Next Step: Fill Parent Data -->
-          <div
-            class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mt-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <svg
-                  class="h-6 w-6 text-blue-600 dark:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                  Langkah Selanjutnya
-                </h3>
-                <p class="text-blue-800 dark:text-blue-400 mb-2">
-                  Setelah menyimpan data santri, lanjutkan dengan mengisi atau mengedit data orang
-                  tua/wali santri.
-                </p>
-                <p v-if="checkingOrangtua" class="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                  Memeriksa keberadaan data orang tua...
-                </p>
-                <p v-else class="text-sm text-blue-800 dark:text-blue-300 mb-4">
-                  {{
-                    orangtuaExists
-                      ? 'Data orang tua ditemukan. Klik untuk mengedit.'
-                      : 'Belum ada data orang tua. Klik untuk menambahkan.'
-                  }}
-                </p>
-                <router-link
-                  :to="
-                    orangtuaExists
-                      ? `/santri/${santriId}/orangtua/edit/${orangtuaId}`
-                      : `/santri/${santriId}/orangtua/tambah`
-                  "
-                  :class="[
-                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
-                    checkingOrangtua
-                      ? 'bg-blue-300 text-white cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white',
-                  ]"
-                  :aria-disabled="checkingOrangtua"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Data Entry Cards Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <!-- Next Step: Fill Parent Data -->
+            <div
+              class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-2a6 6 0 0112 0v2zm0 0h6v-2a6 6 0 00-9-5.697"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {{
-                    checkingOrangtua
-                      ? 'Memuat...'
-                      : orangtuaExists
-                        ? 'Edit Data Orang Tua'
-                        : 'Isi Data Orang Tua'
-                  }}
-                </router-link>
-                <p v-if="orangtuaCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-                  {{ orangtuaCheckError }}
-                </p>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                    Langkah Selanjutnya
+                  </h3>
+                  <p class="text-blue-800 dark:text-blue-400 mb-2 text-sm">
+                    Setelah menyimpan data santri, lanjutkan dengan mengisi atau mengedit data orang
+                    tua/wali santri.
+                  </p>
+                  <p v-if="checkingOrangtua" class="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                    Memeriksa keberadaan data orang tua...
+                  </p>
+                  <p v-else class="text-sm text-blue-800 dark:text-blue-300 mb-4">
+                    {{
+                      orangtuaExists
+                        ? 'Data orang tua ditemukan. Klik untuk mengedit.'
+                        : 'Belum ada data orang tua. Klik untuk menambahkan.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="
+                      orangtuaExists
+                        ? `/santri/${santriId}/orangtua/edit/${orangtuaId}`
+                        : `/santri/${santriId}/orangtua/tambah`
+                    "
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center',
+                      checkingOrangtua
+                        ? 'bg-blue-300 text-white cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white',
+                    ]"
+                    :aria-disabled="checkingOrangtua"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-2a6 6 0 0112 0v2zm0 0h6v-2a6 6 0 00-9-5.697"
+                      />
+                    </svg>
+                    {{
+                      checkingOrangtua
+                        ? 'Memuat...'
+                        : orangtuaExists
+                          ? 'Edit Data Orang Tua'
+                          : 'Isi Data Orang Tua'
+                    }}
+                  </router-link>
+                  <p v-if="orangtuaCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                    {{ orangtuaCheckError }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Next Step: Asset Data -->
-          <div
-            class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <svg
-                  class="h-6 w-6 text-emerald-600 dark:text-emerald-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c1.657 0 3-.895 3-2s-1.343-2-3-2-3 .895-3 2 1.343 2 3 2zm0 0v4m-4 6h8a2 2 0 002-2v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-emerald-900 dark:text-emerald-200 mb-2">
-                  Data Asset Santri
-                </h3>
-                <p class="text-emerald-800 dark:text-emerald-300 mb-2">
-                  Lengkapi informasi aset yang dimiliki santri untuk mendukung analisis kebutuhan.
-                </p>
-                <p v-if="checkingAsset" class="text-sm text-emerald-700 dark:text-emerald-200 mb-4">
-                  Memeriksa keberadaan data aset...
-                </p>
-                <p v-else class="text-sm text-emerald-800 dark:text-emerald-200 mb-4">
-                  {{
-                    assetExists
-                      ? 'Data aset ditemukan. Klik untuk mengedit.'
-                      : 'Belum ada data aset. Klik untuk menambahkan.'
-                  }}
-                </p>
-                <router-link
-                  :to="
-                    assetExists
-                      ? `/santri/${santriId}/asset/edit/${assetId}`
-                      : `/santri/${santriId}/asset/tambah`
-                  "
-                  :class="[
-                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
-                    checkingAsset
-                      ? 'bg-emerald-300 text-white cursor-not-allowed'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white',
-                  ]"
-                  :aria-disabled="checkingAsset"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Next Step: Asset Data -->
+            <div
+              class="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      d="M12 8c1.657 0 3-.895 3-2s-1.343-2-3-2-3 .895-3 2 1.343 2 3 2zm0 0v4m-4 6h8a2 2 0 002-2v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2z"
                     />
                   </svg>
-                  {{
-                    checkingAsset ? 'Memuat...' : assetExists ? 'Edit Data Aset' : 'Isi Data Aset'
-                  }}
-                </router-link>
-                <p v-if="assetCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-                  {{ assetCheckError }}
-                </p>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-emerald-900 dark:text-emerald-200 mb-2">
+                    Data Asset Santri
+                  </h3>
+                  <p class="text-emerald-800 dark:text-emerald-300 mb-2 text-sm">
+                    Lengkapi informasi aset yang dimiliki santri untuk mendukung analisis kebutuhan.
+                  </p>
+                  <p
+                    v-if="checkingAsset"
+                    class="text-sm text-emerald-700 dark:text-emerald-200 mb-4"
+                  >
+                    Memeriksa keberadaan data aset...
+                  </p>
+                  <p v-else class="text-sm text-emerald-800 dark:text-emerald-200 mb-4">
+                    {{
+                      assetExists
+                        ? 'Data aset ditemukan. Klik untuk mengedit.'
+                        : 'Belum ada data aset. Klik untuk menambahkan.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="
+                      assetExists
+                        ? `/santri/${santriId}/asset/edit/${assetId}`
+                        : `/santri/${santriId}/asset/tambah`
+                    "
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center',
+                      checkingAsset
+                        ? 'bg-emerald-300 text-white cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white',
+                    ]"
+                    :aria-disabled="checkingAsset"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    {{
+                      checkingAsset ? 'Memuat...' : assetExists ? 'Edit Data Aset' : 'Isi Data Aset'
+                    }}
+                  </router-link>
+                  <p v-if="assetCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                    {{ assetCheckError }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Next Step: Rumah Data -->
-          <div
-            class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <svg
-                  class="h-6 w-6 text-amber-600 dark:text-amber-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-amber-900 dark:text-amber-200 mb-2">
-                  Data Kondisi Rumah
-                </h3>
-                <p class="text-amber-800 dark:text-amber-300 mb-2">
-                  Lengkapi informasi kondisi rumah tempat tinggal santri.
-                </p>
-                <p v-if="checkingRumah" class="text-sm text-amber-700 dark:text-amber-200 mb-4">
-                  Memeriksa keberadaan data rumah...
-                </p>
-                <p v-else class="text-sm text-amber-800 dark:text-amber-200 mb-4">
-                  {{
-                    rumahExists
-                      ? 'Data rumah ditemukan. Klik untuk mengedit.'
-                      : 'Belum ada data rumah. Klik untuk menambahkan.'
-                  }}
-                </p>
-                <router-link
-                  :to="
-                    rumahExists
-                      ? `/santri/${santriId}/rumah/edit/${rumahId}`
-                      : `/santri/${santriId}/rumah/tambah`
-                  "
-                  :class="[
-                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
-                    checkingRumah
-                      ? 'bg-amber-300 text-white cursor-not-allowed'
-                      : 'bg-amber-600 hover:bg-amber-700 text-white',
-                  ]"
-                  :aria-disabled="checkingRumah"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Next Step: Rumah Data -->
+            <div
+              class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-6"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-amber-600 dark:text-amber-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -676,69 +641,73 @@
                       d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                     />
                   </svg>
-                  {{
-                    checkingRumah ? 'Memuat...' : rumahExists ? 'Edit Data Rumah' : 'Isi Data Rumah'
-                  }}
-                </router-link>
-                <p v-if="rumahCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-                  {{ rumahCheckError }}
-                </p>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-amber-900 dark:text-amber-200 mb-2">
+                    Data Kondisi Rumah
+                  </h3>
+                  <p class="text-amber-800 dark:text-amber-300 mb-2 text-sm">
+                    Lengkapi informasi kondisi rumah tempat tinggal santri.
+                  </p>
+                  <p v-if="checkingRumah" class="text-sm text-amber-700 dark:text-amber-200 mb-4">
+                    Memeriksa keberadaan data rumah...
+                  </p>
+                  <p v-else class="text-sm text-amber-800 dark:text-amber-200 mb-4">
+                    {{
+                      rumahExists
+                        ? 'Data rumah ditemukan. Klik untuk mengedit.'
+                        : 'Belum ada data rumah. Klik untuk menambahkan.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="
+                      rumahExists
+                        ? `/santri/${santriId}/rumah/edit/${rumahId}`
+                        : `/santri/${santriId}/rumah/tambah`
+                    "
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center',
+                      checkingRumah
+                        ? 'bg-amber-300 text-white cursor-not-allowed'
+                        : 'bg-amber-600 hover:bg-amber-700 text-white',
+                    ]"
+                    :aria-disabled="checkingRumah"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                    {{
+                      checkingRumah
+                        ? 'Memuat...'
+                        : rumahExists
+                          ? 'Edit Data Rumah'
+                          : 'Isi Data Rumah'
+                    }}
+                  </router-link>
+                  <p v-if="rumahCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                    {{ rumahCheckError }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Next Step: Kesehatan Data -->
-          <div
-            class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <svg
-                  class="h-6 w-6 text-red-600 dark:text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
-                  Data Kesehatan Santri
-                </h3>
-                <p class="text-red-800 dark:text-red-300 mb-2">
-                  Lengkapi informasi kesehatan santri untuk pemantauan kesehatan.
-                </p>
-                <p v-if="checkingKesehatan" class="text-sm text-red-700 dark:text-red-200 mb-4">
-                  Memeriksa keberadaan data kesehatan...
-                </p>
-                <p v-else class="text-sm text-red-800 dark:text-red-200 mb-4">
-                  {{
-                    kesehatanExists
-                      ? 'Data kesehatan ditemukan. Klik untuk mengedit.'
-                      : 'Belum ada data kesehatan. Klik untuk menambahkan.'
-                  }}
-                </p>
-                <router-link
-                  :to="
-                    kesehatanExists
-                      ? `/santri/${santriId}/kesehatan/edit/${kesehataanId}`
-                      : `/santri/${santriId}/kesehatan/tambah`
-                  "
-                  :class="[
-                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
-                    checkingKesehatan
-                      ? 'bg-red-300 text-white cursor-not-allowed'
-                      : 'bg-red-600 hover:bg-red-700 text-white',
-                  ]"
-                  :aria-disabled="checkingKesehatan"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Next Step: Kesehatan Data -->
+            <div
+              class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -746,73 +715,76 @@
                       d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                     />
                   </svg>
-                  {{
-                    checkingKesehatan
-                      ? 'Memuat...'
-                      : kesehatanExists
-                        ? 'Edit Data Kesehatan'
-                        : 'Isi Data Kesehatan'
-                  }}
-                </router-link>
-                <p v-if="kesehataanCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-                  {{ kesehataanCheckError }}
-                </p>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
+                    Data Kesehatan Santri
+                  </h3>
+                  <p class="text-red-800 dark:text-red-300 mb-2 text-sm">
+                    Lengkapi informasi kesehatan santri untuk pemantauan kesehatan.
+                  </p>
+                  <p v-if="checkingKesehatan" class="text-sm text-red-700 dark:text-red-200 mb-4">
+                    Memeriksa keberadaan data kesehatan...
+                  </p>
+                  <p v-else class="text-sm text-red-800 dark:text-red-200 mb-4">
+                    {{
+                      kesehatanExists
+                        ? 'Data kesehatan ditemukan. Klik untuk mengedit.'
+                        : 'Belum ada data kesehatan. Klik untuk menambahkan.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="
+                      kesehatanExists
+                        ? `/santri/${santriId}/kesehatan/edit/${kesehataanId}`
+                        : `/santri/${santriId}/kesehatan/tambah`
+                    "
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center',
+                      checkingKesehatan
+                        ? 'bg-red-300 text-white cursor-not-allowed'
+                        : 'bg-red-600 hover:bg-red-700 text-white',
+                    ]"
+                    :aria-disabled="checkingKesehatan"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      />
+                    </svg>
+                    {{
+                      checkingKesehatan
+                        ? 'Memuat...'
+                        : kesehatanExists
+                          ? 'Edit Data Kesehatan'
+                          : 'Isi Data Kesehatan'
+                    }}
+                  </router-link>
+                  <p
+                    v-if="kesehataanCheckError"
+                    class="mt-3 text-sm text-red-700 dark:text-red-300"
+                  >
+                    {{ kesehataanCheckError }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Next Step: Bansos Data -->
-          <div
-            class="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <svg
-                  class="h-6 w-6 text-purple-600 dark:text-purple-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-purple-900 dark:text-purple-200 mb-2">
-                  Data Bantuan Sosial
-                </h3>
-                <p class="text-purple-800 dark:text-purple-300 mb-2">
-                  Lengkapi informasi bantuan sosial yang diterima santri.
-                </p>
-                <p v-if="checkingBansos" class="text-sm text-purple-700 dark:text-purple-200 mb-4">
-                  Memeriksa keberadaan data bantuan sosial...
-                </p>
-                <p v-else class="text-sm text-purple-800 dark:text-purple-200 mb-4">
-                  {{
-                    bansosExists
-                      ? 'Data bantuan sosial ditemukan. Klik untuk mengedit.'
-                      : 'Belum ada data bantuan sosial. Klik untuk menambahkan.'
-                  }}
-                </p>
-                <router-link
-                  :to="
-                    bansosExists
-                      ? `/santri/${santriId}/bansos/edit/${bansosId}`
-                      : `/santri/${santriId}/bansos/tambah`
-                  "
-                  :class="[
-                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
-                    checkingBansos
-                      ? 'bg-purple-300 text-white cursor-not-allowed'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white',
-                  ]"
-                  :aria-disabled="checkingBansos"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Next Step: Bansos Data -->
+            <div
+              class="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-6"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-purple-600 dark:text-purple-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -820,72 +792,76 @@
                       d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {{
-                    checkingBansos
-                      ? 'Memuat...'
-                      : bansosExists
-                        ? 'Edit Data Bantuan Sosial'
-                        : 'Isi Data Bantuan Sosial'
-                  }}
-                </router-link>
-                <p v-if="bansosCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-                  {{ bansosCheckError }}
-                </p>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-purple-900 dark:text-purple-200 mb-2">
+                    Data Bantuan Sosial
+                  </h3>
+                  <p class="text-purple-800 dark:text-purple-300 mb-2 text-sm">
+                    Lengkapi informasi bantuan sosial yang diterima santri.
+                  </p>
+                  <p
+                    v-if="checkingBansos"
+                    class="text-sm text-purple-700 dark:text-purple-200 mb-4"
+                  >
+                    Memeriksa keberadaan data bantuan sosial...
+                  </p>
+                  <p v-else class="text-sm text-purple-800 dark:text-purple-200 mb-4">
+                    {{
+                      bansosExists
+                        ? 'Data bantuan sosial ditemukan. Klik untuk mengedit.'
+                        : 'Belum ada data bantuan sosial. Klik untuk menambahkan.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="
+                      bansosExists
+                        ? `/santri/${santriId}/bansos/edit/${bansosId}`
+                        : `/santri/${santriId}/bansos/tambah`
+                    "
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center',
+                      checkingBansos
+                        ? 'bg-purple-300 text-white cursor-not-allowed'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white',
+                    ]"
+                    :aria-disabled="checkingBansos"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {{
+                      checkingBansos
+                        ? 'Memuat...'
+                        : bansosExists
+                          ? 'Edit Data Bantuan Sosial'
+                          : 'Isi Data Bantuan Sosial'
+                    }}
+                  </router-link>
+                  <p v-if="bansosCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                    {{ bansosCheckError }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Next Step: Pembiayaan Data -->
-          <div
-            class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6"
-          >
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <svg
-                  class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
-                  Data Pembiayaan
-                </h3>
-                <p class="text-indigo-800 dark:text-indigo-300 mb-2">
-                  Lengkapi informasi pembiayaan pendidikan santri.
-                </p>
-                <p
-                  v-if="checkingPembiayaan"
-                  class="text-sm text-indigo-700 dark:text-indigo-200 mb-4"
-                >
-                  Memeriksa keberadaan data pembiayaan...
-                </p>
-                <p v-else class="text-sm text-indigo-800 dark:text-indigo-200 mb-4">
-                  {{
-                    pembiayaanExists
-                      ? 'Data pembiayaan ditemukan. Klik untuk mengelola.'
-                      : 'Belum ada data pembiayaan. Klik untuk menambahkan.'
-                  }}
-                </p>
-                <router-link
-                  :to="`/santri/${santriId}/pembiayaan`"
-                  :class="[
-                    'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
-                    checkingPembiayaan
-                      ? 'bg-indigo-300 text-white cursor-not-allowed'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white',
-                  ]"
-                  :aria-disabled="checkingPembiayaan"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Next Step: Pembiayaan Data -->
+            <div
+              class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -893,17 +869,130 @@
                       d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {{
-                    checkingPembiayaan
-                      ? 'Memuat...'
-                      : pembiayaanExists
-                        ? 'Kelola Data Pembiayaan'
-                        : 'Isi Data Pembiayaan'
-                  }}
-                </router-link>
-                <p v-if="pembiayaanCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
-                  {{ pembiayaanCheckError }}
-                </p>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
+                    Data Pembiayaan
+                  </h3>
+                  <p class="text-indigo-800 dark:text-indigo-300 mb-2 text-sm">
+                    Lengkapi informasi pembiayaan pendidikan santri.
+                  </p>
+                  <p
+                    v-if="checkingPembiayaan"
+                    class="text-sm text-indigo-700 dark:text-indigo-200 mb-4"
+                  >
+                    Memeriksa keberadaan data pembiayaan...
+                  </p>
+                  <p v-else class="text-sm text-indigo-800 dark:text-indigo-200 mb-4">
+                    {{
+                      pembiayaanExists
+                        ? 'Data pembiayaan ditemukan. Klik untuk mengelola.'
+                        : 'Belum ada data pembiayaan. Klik untuk menambahkan.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="`/santri/${santriId}/pembiayaan`"
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center',
+                      checkingPembiayaan
+                        ? 'bg-indigo-300 text-white cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white',
+                    ]"
+                    :aria-disabled="checkingPembiayaan"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {{
+                      checkingPembiayaan
+                        ? 'Memuat...'
+                        : pembiayaanExists
+                          ? 'Kelola Data Pembiayaan'
+                          : 'Isi Data Pembiayaan'
+                    }}
+                  </router-link>
+                  <p
+                    v-if="pembiayaanCheckError"
+                    class="mt-3 text-sm text-red-700 dark:text-red-300"
+                  >
+                    {{ pembiayaanCheckError }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Next Step: Scoring Santri -->
+            <div
+              class="bg-teal-50 dark:bg-teal-900/30 border-2 border-teal-300 dark:border-teal-700 rounded-lg p-6 shadow-md"
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <svg
+                    class="h-6 w-6 text-teal-600 dark:text-teal-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-teal-900 dark:text-teal-200 mb-2">
+                    Scoring Santri
+                  </h3>
+                  <p class="text-teal-800 dark:text-teal-300 mb-2 text-sm">
+                    Hitung dan analisis skor kemiskinan santri berdasarkan berbagai indikator.
+                  </p>
+                  <p v-if="checkingScoring" class="text-sm text-teal-700 dark:text-teal-200 mb-4">
+                    Memeriksa keberadaan data scoring...
+                  </p>
+                  <p v-else class="text-sm text-teal-800 dark:text-teal-200 mb-4">
+                    {{
+                      scoringExists
+                        ? 'Data scoring ditemukan. Klik untuk melihat atau hitung ulang.'
+                        : 'Belum ada data scoring. Klik untuk menghitung skor pertama kali.'
+                    }}
+                  </p>
+                  <router-link
+                    :to="`/santri/${santriId}/scoring`"
+                    :class="[
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm w-full justify-center shadow-md',
+                      checkingScoring
+                        ? 'bg-teal-300 text-white cursor-not-allowed'
+                        : 'bg-teal-600 hover:bg-teal-700 text-white hover:shadow-lg',
+                    ]"
+                    :aria-disabled="checkingScoring"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {{
+                      checkingScoring
+                        ? 'Memuat...'
+                        : scoringExists
+                          ? 'Lihat / Hitung Ulang Skor'
+                          : 'Hitung Skor Santri'
+                    }}
+                  </router-link>
+                  <p v-if="scoringCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                    {{ scoringCheckError }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -1014,6 +1103,7 @@ import { getRumahBySantri } from '@/services/santriRumahService'
 import { getKesehataanBySantri } from '@/services/santriKesehataanService'
 import { getBansosBySantri } from '@/services/santriBansosService'
 import { getPembiayaanBySantri } from '@/services/santriPembiayaanService'
+import { checkSantriScoreExists } from '@/services/scoringService'
 import { API_BASE_URL } from '@/utils/apiConfig'
 
 const route = useRoute()
@@ -1052,6 +1142,9 @@ const checkingPembiayaan = ref(false)
 const pembiayaanExists = ref(false)
 const pembiayaanId = ref(null)
 const pembiayaanCheckError = ref(null)
+const checkingScoring = ref(false)
+const scoringExists = ref(false)
+const scoringCheckError = ref(null)
 
 const formData = ref({
   nama: '',
@@ -1407,6 +1500,18 @@ const checkPembiayaanStatus = async () => {
   }
 }
 
+const checkScoringStatus = async () => {
+  checkingScoring.value = true
+  scoringCheckError.value = null
+  try {
+    scoringExists.value = await checkSantriScoreExists(santriId)
+  } catch (err) {
+    scoringCheckError.value = err.message || 'Gagal memeriksa data scoring'
+  } finally {
+    checkingScoring.value = false
+  }
+}
+
 onMounted(() => {
   loadSantriData()
   checkOrangtuaStatus()
@@ -1415,5 +1520,6 @@ onMounted(() => {
   checkKesehataanStatus()
   checkBansosStatus()
   checkPembiayaanStatus()
+  checkScoringStatus()
 })
 </script>

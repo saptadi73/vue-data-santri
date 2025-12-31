@@ -26,45 +26,85 @@ const dummyGeoData = {
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [106.8456, -6.2088] },
-      properties: { name: 'Ahmad Santoso', ekonomi: 'Menengah', score: 75 },
+      properties: {
+        id: '660e8400-e29b-41d4-a716-446655440001',
+        nama: 'Pondok Pesantren Al-Ikhlas',
+        akreditasi: 'A',
+        jumlah_santri: 150,
+        jumlah_fasilitas: 12,
+        score: 85,
+      },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [110.3695, -7.7956] },
-      properties: { name: 'Fatimah Zahra', ekonomi: 'Rendah', score: 85 },
+      properties: {
+        id: '660e8400-e29b-41d4-a716-446655440002',
+        nama: 'Pondok Pesantren As-Sunnah',
+        akreditasi: 'B',
+        jumlah_santri: 200,
+        jumlah_fasilitas: 15,
+        score: 78,
+      },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [112.7521, -7.2575] },
-      properties: { name: 'Muhammad Ridwan', ekonomi: 'Rendah', score: 90 },
+      properties: {
+        id: '660e8400-e29b-41d4-a716-446655440003',
+        nama: "Pondok Pesantren Nurul Qur'an",
+        akreditasi: 'A',
+        jumlah_santri: 180,
+        jumlah_fasilitas: 18,
+        score: 90,
+      },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [107.6191, -6.9175] },
-      properties: { name: 'Siti Aisyah', ekonomi: 'Menengah', score: 70 },
+      properties: {
+        id: '660e8400-e29b-41d4-a716-446655440004',
+        nama: 'Pondok Pesantren Daarul Hana',
+        akreditasi: 'B',
+        jumlah_santri: 120,
+        jumlah_fasilitas: 10,
+        score: 72,
+      },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [113.9213, -8.1545] },
-      properties: { name: 'Abdullah Hakim', ekonomi: 'Rendah', score: 88 },
+      properties: {
+        id: '660e8400-e29b-41d4-a716-446655440005',
+        nama: 'Pondok Pesantren Al-Haramain',
+        akreditasi: 'A',
+        jumlah_santri: 250,
+        jumlah_fasilitas: 20,
+        score: 88,
+      },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [109.1402, -6.8748] },
-      properties: { name: 'Khadijah Nurma', ekonomi: 'Rendah', score: 92 },
+      properties: {
+        id: '660e8400-e29b-41d4-a716-446655440006',
+        nama: 'Pondok Pesantren Assalaam',
+        akreditasi: 'C',
+        jumlah_santri: 100,
+        jumlah_fasilitas: 8,
+        score: 65,
+      },
     },
   ],
 }
 
 const dummyHeatData = [
-  { lat: -6.2088, lng: 106.8456, weight: 0.8 },
-  { lat: -7.7956, lng: 110.3695, weight: 1.0 },
+  { lat: -6.2088, lng: 106.8456, weight: 0.85 },
+  { lat: -7.7956, lng: 110.3695, weight: 0.78 },
   { lat: -7.2575, lng: 112.7521, weight: 0.9 },
-  { lat: -6.9175, lng: 107.6191, weight: 0.7 },
-  { lat: -8.1545, lng: 113.9213, weight: 0.95 },
-  { lat: -6.8748, lng: 109.1402, weight: 1.0 },
-  { lat: -7.5, lng: 111.0, weight: 0.6 },
-  { lat: -6.5, lng: 108.0, weight: 0.75 },
+  { lat: -6.9175, lng: 107.6191, weight: 0.72 },
+  { lat: -8.1545, lng: 113.9213, weight: 0.88 },
+  { lat: -6.8748, lng: 109.1402, weight: 0.65 },
 ]
 
 onMounted(async () => {
@@ -75,13 +115,13 @@ onMounted(async () => {
     map = L.map('map').setView([-2.5, 118], 5)
     applyBaseLayer(theme.value)
 
-    // Create custom pane for santri markers with higher z-index
-    map.createPane('santriPane')
-    map.getPane('santriPane').style.zIndex = 400 // Same as default markers
+    // Create custom pane for pesantren markers with higher z-index
+    map.createPane('pesantrenPane')
+    map.getPane('pesantrenPane').style.zIndex = 400
 
     // Create popup pane with highest z-index to appear above everything
     map.createPane('popupPane')
-    map.getPane('popupPane').style.zIndex = 1000 // Highest z-index for popups
+    map.getPane('popupPane').style.zIndex = 1000
 
     let geo, heat
 
@@ -92,8 +132,8 @@ onMounted(async () => {
     } else {
       // ===== FETCH DATA DARI API =====
       try {
-        const geoResponse = await fetch(`${API_BASE}/gis/santri-points`)
-        if (!geoResponse.ok) throw new Error(`Gagal memuat data santri (${geoResponse.status})`)
+        const geoResponse = await fetch(`${API_BASE}/gis/pesantren-points`)
+        if (!geoResponse.ok) throw new Error(`Gagal memuat data pesantren (${geoResponse.status})`)
         const geoData = await geoResponse.json()
 
         // Backend membungkus GeoJSON dalam object data
@@ -103,7 +143,7 @@ onMounted(async () => {
       }
 
       try {
-        const heatResponse = await fetch(`${API_BASE}/gis/heatmap`)
+        const heatResponse = await fetch(`${API_BASE}/gis/pesantren-heatmap`)
         if (!heatResponse.ok) throw new Error(`Gagal memuat heatmap (${heatResponse.status})`)
         const heatData = await heatResponse.json()
 
@@ -119,23 +159,24 @@ onMounted(async () => {
       }
     }
 
-    // Function to get marker color based on ekonomi level
-    const getMarkerColor = (ekonomi) => {
-      const level = ekonomi?.toLowerCase().trim() || ''
+    // Function to get marker color based on akreditasi level
+    const getMarkerColor = (akreditasi) => {
+      const level = akreditasi?.toLowerCase().trim() || ''
 
-      if (level === 'miskin' || level === 'sangat miskin') {
-        return { color: '#dc2626', fillColor: '#ef4444' } // Red - Miskin
-      } else if (level === 'rentan' || level === 'rentan miskin') {
-        return { color: '#f59e0b', fillColor: '#fbbf24' } // Yellow - Rentan
-      } else if (level === 'cukup' || level === 'tidak miskin') {
-        return { color: '#6b7280', fillColor: '#9ca3af' } // Gray - Cukup/Tidak Miskin
+      // Support akreditasi A/B/C
+      if (level === 'a' || level === 'sangat_layak' || level === 'sangat layak') {
+        return { color: '#059669', fillColor: '#10b981' } // Green - Akreditasi A / Sangat Layak
+      } else if (level === 'b' || level === 'layak') {
+        return { color: '#d97706', fillColor: '#f59e0b' } // Amber - Akreditasi B / Layak
+      } else if (level === 'c' || level === 'tidak_layak' || level === 'tidak layak') {
+        return { color: '#dc2626', fillColor: '#ef4444' } // Red - Akreditasi C / Tidak Layak
       }
 
-      // Default fallback untuk data yang tidak sesuai kategori
-      return { color: '#9ca3af', fillColor: '#d1d5db' } // Light gray
+      // Default fallback
+      return { color: '#6b7280', fillColor: '#9ca3af' } // Gray
     }
 
-    // ===== TITIK SANTRI (Clustered Markers) =====
+    // ===== TITIK PESANTREN (Clustered Markers) =====
     const clusterGroup = L.markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 50,
@@ -143,64 +184,68 @@ onMounted(async () => {
       disableClusteringAtZoom: 15,
     })
 
-    const createSantriIcon = (ekonomi) => {
-      const { color, fillColor } = getMarkerColor(ekonomi)
-      // Use full-size 16x16 dot with box-sizing to keep center precise
-      const html = `<span style="box-sizing:border-box;width:16px;height:16px;display:block;border-radius:50%;border:2px solid ${color};background:${fillColor}"></span>`
+    const createPesantrenIcon = (akreditasi) => {
+      const { color, fillColor } = getMarkerColor(akreditasi)
+      // Use square marker for pesantren
+      const html = `<span style="box-sizing:border-box;width:18px;height:18px;display:block;border-radius:50%;border:2px solid ${color};background:${fillColor}"></span>`
       return L.divIcon({
-        className: 'santri-marker',
+        className: 'pesantren-marker',
         html,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8], // center anchor for precise positioning
-        popupAnchor: [0, -8],
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+        popupAnchor: [0, -9],
       })
     }
 
-    const santriLayer = L.geoJSON(geo, {
+    const pesantrenLayer = L.geoJSON(geo, {
       pointToLayer: (feature, latlng) => {
         const p = feature.properties || {}
-        // Backend menggunakan 'category', map ke ekonomi
-        const ekonomi = p.ekonomi || p.category
+        // Backend menggunakan 'category', map ke akreditasi
+        const akreditasi = p.akreditasi || p.category
         return L.marker(latlng, {
-          icon: createSantriIcon(ekonomi),
-          pane: 'santriPane',
+          icon: createPesantrenIcon(akreditasi),
+          pane: 'pesantrenPane',
         })
       },
       onEachFeature: (feature, layer) => {
         const p = feature.properties
-        // Backend menggunakan 'name' dan 'category'
+        // Backend menggunakan 'name', 'category', 'students'
         const nama = p.nama || p.name
-        const ekonomi = p.ekonomi || p.category
+        const akreditasi = p.akreditasi || p.category
+        const jumlahSantri = p.jumlah_santri || p.students || 0
+        const jumlahFasilitas = p.jumlah_fasilitas || 0
 
         layer.bindPopup(
           `
-          <div class="santri-popup">
-            <strong class="santri-popup__title">${nama || 'Tidak ada nama'}</strong><br/>
-            <span class="santri-popup__label">Ekonomi:</span> <strong>${ekonomi || 'N/A'}</strong><br/>
-            <span class="santri-popup__label">Skor:</span> <strong>${p.score || 0}</strong>
+          <div class="pesantren-popup">
+            <strong class="pesantren-popup__title">${nama || 'Tidak ada nama'}</strong><br/>
+            <span class="pesantren-popup__label">Akreditasi:</span> <strong>${akreditasi || 'N/A'}</strong><br/>
+            <span class="pesantren-popup__label">Santri:</span> <strong>${jumlahSantri}</strong><br/>
+            <span class="pesantren-popup__label">Fasilitas:</span> <strong>${jumlahFasilitas}</strong><br/>
+            <span class="pesantren-popup__label">Skor:</span> <strong>${p.score || 0}</strong>
           </div>
         `,
-          { className: 'santri-popup' },
+          { className: 'pesantren-popup' },
         )
 
         layer.on('mouseover', function () {
           const el = this.getElement()
           if (el) {
-            const dot = el.querySelector('span')
-            if (dot) dot.style.boxShadow = '0 0 0 3px rgba(0,0,0,0.2)'
+            const marker = el.querySelector('span')
+            if (marker) marker.style.boxShadow = '0 0 0 4px rgba(0,0,0,0.3)'
           }
         })
         layer.on('mouseout', function () {
           const el = this.getElement()
           if (el) {
-            const dot = el.querySelector('span')
-            if (dot) dot.style.boxShadow = 'none'
+            const marker = el.querySelector('span')
+            if (marker) marker.style.boxShadow = 'none'
           }
         })
       },
     })
 
-    clusterGroup.addLayer(santriLayer)
+    clusterGroup.addLayer(pesantrenLayer)
     clusterGroup.addTo(map)
 
     // ===== HEATMAP =====
@@ -210,8 +255,8 @@ onMounted(async () => {
       const normalizedHeat = heat.map((p) => [p.lat, p.lng, p.weight / maxWeight])
 
       L.heatLayer(normalizedHeat, {
-        radius: 30,
-        blur: 20,
+        radius: 40,
+        blur: 25,
         maxZoom: 8,
         gradient: { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red' },
       }).addTo(map)
@@ -231,21 +276,21 @@ onMounted(async () => {
       const div = L.DomUtil.create('div', 'info legend')
       div.innerHTML = `
         <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 12px;">
-          <strong style="display: block; margin-bottom: 8px;">Level Ekonomi Santri</strong>
+          <strong style="display: block; margin-bottom: 8px;">Akreditasi Pesantren</strong>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #ef4444; border-radius: 50%; margin-right: 6px; border: 2px solid #dc2626;"></span>
-            <span>Miskin</span>
+            <span style="display: inline-block; width: 14px; height: 14px; background: #10b981; border-radius: 50%; margin-right: 6px; border: 2px solid #059669;"></span>
+            <span>A - Sangat Baik</span>
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #fbbf24; border-radius: 50%; margin-right: 6px; border: 2px solid #f59e0b;"></span>
-            <span>Rentan</span>
+            <span style="display: inline-block; width: 14px; height: 14px; background: #f59e0b; border-radius: 50%; margin-right: 6px; border: 2px solid #d97706;"></span>
+            <span>B - Baik</span>
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #9ca3af; border-radius: 50%; margin-right: 6px; border: 2px solid #6b7280;"></span>
-            <span>Cukup</span>
+            <span style="display: inline-block; width: 14px; height: 14px; background: #ef4444; border-radius: 50%; margin-right: 6px; border: 2px solid #dc2626;"></span>
+            <span>C - Cukup</span>
           </div>
           <div style="display: flex; align-items: center;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #d1d5db; border-radius: 50%; margin-right: 6px; border: 2px solid #9ca3af;"></span>
+            <span style="display: inline-block; width: 14px; height: 14px; background: #9ca3af; border-radius: 50%; margin-right: 6px; border: 2px solid #6b7280;"></span>
             <span>Tidak ada data</span>
           </div>
         </div>
@@ -327,7 +372,7 @@ const stopThemeObserver = () => {
   <div class="map-container">
     <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Memuat peta...</p>
+      <p>Memuat peta pesantren...</p>
     </div>
     <div v-if="error" class="error-message">⚠️ {{ error }}</div>
     <div id="map"></div>
@@ -339,9 +384,9 @@ const stopThemeObserver = () => {
 .map-container {
   position: relative;
   width: 100%;
-  height: calc(100vh - 80px); /* Sesuaikan dengan tinggi navbar */
+  height: calc(100vh - 80px);
   min-height: 500px;
-  z-index: 1; /* Lebih rendah dari navbar (z-50) */
+  z-index: 1;
   background: #f8fafc;
 }
 
@@ -418,24 +463,25 @@ const stopThemeObserver = () => {
   font-size: 14px;
 }
 
-#map :deep(.santri-popup__title) {
+#map :deep(.pesantren-popup__title) {
   font-family: system-ui, sans-serif;
   font-size: 14px;
-  color: #1e40af;
+  color: #047857;
+  font-weight: 600;
 }
 
-#map :deep(.santri-popup__label) {
+#map :deep(.pesantren-popup__label) {
   color: #475569;
   font-size: 13px;
 }
 
-#map :deep(.santri-popup .leaflet-popup-content-wrapper) {
+#map :deep(.pesantren-popup .leaflet-popup-content-wrapper) {
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 12px 40px -18px rgba(15, 23, 42, 0.35);
 }
 
-#map :deep(.santri-popup .leaflet-popup-tip) {
+#map :deep(.pesantren-popup .leaflet-popup-tip) {
   background: #fff;
   border: 1px solid #e2e8f0;
 }
@@ -463,22 +509,22 @@ const stopThemeObserver = () => {
   border-color: rgba(254, 205, 211, 0.45);
 }
 
-:global(.dark) #map :deep(.santri-popup .leaflet-popup-content-wrapper) {
+:global(.dark) #map :deep(.pesantren-popup .leaflet-popup-content-wrapper) {
   background: #0f172a;
   border-color: #1f2937;
   box-shadow: 0 16px 40px -18px rgba(0, 0, 0, 0.6);
 }
 
-:global(.dark) #map :deep(.santri-popup .leaflet-popup-tip) {
+:global(.dark) #map :deep(.pesantren-popup .leaflet-popup-tip) {
   background: #0f172a;
   border-color: #1f2937;
 }
 
-:global(.dark) #map :deep(.santri-popup__title) {
-  color: #c7d2fe;
+:global(.dark) #map :deep(.pesantren-popup__title) {
+  color: #6ee7b7;
 }
 
-:global(.dark) #map :deep(.santri-popup__label) {
+:global(.dark) #map :deep(.pesantren-popup__label) {
   color: #cbd5e1;
 }
 

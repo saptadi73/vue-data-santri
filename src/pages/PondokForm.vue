@@ -718,6 +718,78 @@
           </div>
         </div>
       </div>
+
+      <!-- Scoring Section (Edit mode only) -->
+      <div v-if="isEdit" class="mt-8">
+        <div
+          class="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-6"
+        >
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <svg
+                class="h-6 w-6 text-cyan-600 dark:text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-cyan-900 dark:text-cyan-200 mb-2">
+                Scoring Pesantren
+              </h3>
+              <p class="text-cyan-800 dark:text-cyan-300 mb-2">
+                Evaluasi kelayakan fasilitas dan mutu pendidikan pesantren.
+              </p>
+              <p v-if="checkingScoring" class="text-sm text-cyan-700 dark:text-cyan-200 mb-4">
+                Memeriksa keberadaan data scoring...
+              </p>
+              <p v-else class="text-sm text-cyan-800 dark:text-cyan-200 mb-4">
+                {{
+                  scoringExists
+                    ? 'Skor pesantren sudah dihitung. Klik untuk lihat atau hitung ulang.'
+                    : 'Belum ada skor pesantren. Klik untuk menghitung.'
+                }}
+              </p>
+              <router-link
+                :to="`/pondok/${route.params.id}/scoring`"
+                :class="[
+                  'inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition',
+                  checkingScoring
+                    ? 'bg-cyan-300 text-white cursor-not-allowed'
+                    : 'bg-cyan-600 hover:bg-cyan-700 text-white',
+                ]"
+                :aria-disabled="checkingScoring"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                {{
+                  checkingScoring
+                    ? 'Memuat...'
+                    : scoringExists
+                      ? 'Lihat / Hitung Ulang Skor'
+                      : 'Hitung Skor Pesantren'
+                }}
+              </router-link>
+              <p v-if="scoringCheckError" class="mt-3 text-sm text-red-700 dark:text-red-300">
+                {{ scoringCheckError }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -729,6 +801,7 @@ import { createPondok, getPondokDetail, updatePondok } from '@/services/pondokPe
 import { getFisikByPesantren } from '@/services/pesantrenFisikService'
 import { getPendidikanByPesantren } from '@/services/pesantrenPendidikanService'
 import { getFasilitasByPesantren } from '@/services/pesantrenFasilitasService'
+import { checkPesantrenScoreExists } from '@/services/pesantrenScoringService'
 import { API_BASE_URL } from '@/utils/apiConfig'
 
 const router = useRouter()
@@ -780,6 +853,9 @@ const checkingFasilitas = ref(false)
 const fasilitasExists = ref(false)
 const fasilitasId = ref(null)
 const fasilitasCheckError = ref(null)
+const checkingScoring = ref(false)
+const scoringExists = ref(false)
+const scoringCheckError = ref(null)
 
 const revokePreview = (fileObj) => {
   if (fileObj?.preview) URL.revokeObjectURL(fileObj.preview)
@@ -1053,6 +1129,25 @@ const checkFasilitasStatus = async () => {
   }
 }
 
+const checkScoringStatus = async () => {
+  if (!isEdit.value) return
+
+  checkingScoring.value = true
+  scoringCheckError.value = null
+
+  try {
+    console.log('📊 Checking scoring status for pesantren:', route.params.id)
+    const exists = await checkPesantrenScoreExists(route.params.id)
+    scoringExists.value = exists
+    console.log(exists ? '✅ Scoring data found!' : '❌ No scoring data found')
+  } catch (err) {
+    console.warn('⚠️ Warning checking scoring:', err)
+    scoringExists.value = false
+  } finally {
+    checkingScoring.value = false
+  }
+}
+
 // Trigger check setiap kali kembali ke halaman ini
 watch(
   () => route.params.id,
@@ -1061,6 +1156,7 @@ watch(
       checkFisikStatus()
       checkPendidikanStatus()
       checkFasilitasStatus()
+      checkScoringStatus()
     }
   },
   { flush: 'post' },
@@ -1071,6 +1167,7 @@ onMounted(() => {
   checkFisikStatus()
   checkPendidikanStatus()
   checkFasilitasStatus()
+  checkScoringStatus()
 })
 
 onUnmounted(() => {
