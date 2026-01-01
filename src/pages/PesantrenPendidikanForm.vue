@@ -108,8 +108,8 @@
             >
               <option value="">Pilih kurikulum</option>
               <option value="terstandar">Terstandar</option>
-              <option value="lokal">Lokal</option>
-              <option value="gabungan">Gabungan</option>
+              <option value="internal">Internal</option>
+              <option value="tidak_jelas">Tidak Jelas</option>
             </select>
           </div>
 

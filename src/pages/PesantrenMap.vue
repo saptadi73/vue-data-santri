@@ -213,15 +213,13 @@ onMounted(async () => {
         const nama = p.nama || p.name
         const akreditasi = p.akreditasi || p.category
         const jumlahSantri = p.jumlah_santri || p.students || 0
-        const jumlahFasilitas = p.jumlah_fasilitas || 0
 
         layer.bindPopup(
           `
           <div class="pesantren-popup">
             <strong class="pesantren-popup__title">${nama || 'Tidak ada nama'}</strong><br/>
-            <span class="pesantren-popup__label">Akreditasi:</span> <strong>${akreditasi || 'N/A'}</strong><br/>
+            <span class="pesantren-popup__label">Kelayakan:</span> <strong>${akreditasi || 'N/A'}</strong><br/>
             <span class="pesantren-popup__label">Santri:</span> <strong>${jumlahSantri}</strong><br/>
-            <span class="pesantren-popup__label">Fasilitas:</span> <strong>${jumlahFasilitas}</strong><br/>
             <span class="pesantren-popup__label">Skor:</span> <strong>${p.score || 0}</strong>
           </div>
         `,

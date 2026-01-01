@@ -180,14 +180,13 @@
               <!-- Daya Listrik -->
               <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Daya Listrik (VA) <span class="text-red-500">*</span>
+                  Daya Listrik (VA)
                 </label>
                 <select
                   v-model="formData.daya_listrik_va"
-                  required
                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="">Pilih Daya Listrik</option>
+                  <option value="">Pilih Daya Listrik (Opsional)</option>
                   <option value="450">450 VA</option>
                   <option value="900">900 VA</option>
                   <option value="1300">1300 VA</option>

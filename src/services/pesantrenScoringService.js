@@ -50,6 +50,13 @@ export async function getPesantrenScore(pesantrenId) {
     console.log('getPesantrenScore success:', data)
     return data.data || data
   } catch (error) {
+    // Handle network errors gracefully
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      console.warn(
+        'Network error: Unable to fetch pesantren score. Server may be down or endpoint unavailable.',
+      )
+      return null
+    }
     console.error('getPesantrenScore error:', error)
     throw error
   }
