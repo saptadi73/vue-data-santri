@@ -14,10 +14,17 @@ const USE_DUMMY_DATA = false // Set false jika backend sudah ready + CORS config
 let map = null
 let baseTileLayer = null
 let themeObserver = null
+let heatmapLayer = null
+let choropletheLayer = null
+let clusterGroupRef = null
 let boundaryLayersRef = ref(null)
 const isLoading = ref(true)
 const error = ref(null)
 const theme = ref('light')
+const showHeatmap = ref(true)
+const showChoropleth = ref(false)
+const choroplethMetric = ref('count') // 'count', 'avg_score'
+const displayMode = ref('points') // 'points', 'heatmap', 'choropleth'
 
 // Data dummy untuk testing
 const dummyGeoData = {
@@ -202,6 +209,7 @@ onMounted(async () => {
 
     clusterGroup.addLayer(santriLayer)
     clusterGroup.addTo(map)
+    clusterGroupRef = clusterGroup
 
     // ===== HEATMAP =====
     if (heat && heat.length > 0) {
@@ -209,12 +217,101 @@ onMounted(async () => {
       const maxWeight = Math.max(...heat.map((p) => p.weight))
       const normalizedHeat = heat.map((p) => [p.lat, p.lng, p.weight / maxWeight])
 
-      L.heatLayer(normalizedHeat, {
+      heatmapLayer = L.heatLayer(normalizedHeat, {
         radius: 30,
         blur: 20,
         maxZoom: 8,
         gradient: { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red' },
-      }).addTo(map)
+      })
+
+      if (showHeatmap.value) {
+        heatmapLayer.addTo(map)
+      }
+    }
+
+    // ===== CHOROPLETH (Aggregate by Kabupaten) =====
+    try {
+      const boundaryResponse = await fetch('/data/geo/indonesia-kabupaten.geojson')
+      if (boundaryResponse.ok) {
+        const boundaryData = await boundaryResponse.json()
+
+        // Aggregate santri data by kabupaten
+        const aggregateByKabupaten = (geoData) => {
+          const aggregate = {}
+          geoData.features?.forEach((feature) => {
+            const kabupaten = feature.properties?.kabupaten || 'Unknown'
+            if (!aggregate[kabupaten]) {
+              aggregate[kabupaten] = { count: 0, total_score: 0, features: [] }
+            }
+            aggregate[kabupaten].count += 1
+            aggregate[kabupaten].total_score += feature.properties?.score || 0
+            aggregate[kabupaten].features.push(feature)
+          })
+          return aggregate
+        }
+
+        const santriAggregated = aggregateByKabupaten(geo)
+
+        // Determine color based on metric
+        const getColor = (value, max) => {
+          const ratio = max > 0 ? value / max : 0
+          if (ratio > 0.8) return '#ef4444' // Red
+          if (ratio > 0.6) return '#f97316' // Orange
+          if (ratio > 0.4) return '#eab308' // Yellow
+          if (ratio > 0.2) return '#84cc16' // Lime
+          return '#22c55e' // Green
+        }
+
+        // Calculate max value for normalization
+        const values = Object.values(santriAggregated).map((v) =>
+          choroplethMetric.value === 'count' ? v.count : v.total_score / v.count,
+        )
+        const maxValue = Math.max(...values)
+
+        const choroplethLayer = L.geoJSON(boundaryData, {
+          style: (feature) => {
+            const kabupaten = feature.properties?.nama || feature.properties?.NAME || 'Unknown'
+            const data = santriAggregated[kabupaten]
+            const value =
+              data && choroplethMetric.value === 'count'
+                ? data.count
+                : data
+                  ? data.total_score / data.count
+                  : 0
+
+            return {
+              fillColor: getColor(value, maxValue),
+              weight: 2,
+              opacity: 0.7,
+              color: '#333',
+              fillOpacity: 0.6,
+            }
+          },
+          onEachFeature: (feature, layer) => {
+            const kabupaten = feature.properties?.nama || feature.properties?.NAME || 'Unknown'
+            const data = santriAggregated[kabupaten]
+
+            const tooltip =
+              data && choroplethMetric.value === 'count'
+                ? `<strong>${kabupaten}</strong><br>Santri: ${data.count}`
+                : data
+                  ? `<strong>${kabupaten}</strong><br>Rata-rata Skor: ${(data.total_score / data.count).toFixed(2)}`
+                  : `<strong>${kabupaten}</strong><br>Data tidak tersedia`
+
+            layer.bindPopup(tooltip)
+            layer.on('mouseover', function () {
+              this.setStyle({ weight: 3, opacity: 1 })
+            })
+            layer.on('mouseout', function () {
+              this.setStyle({ weight: 2, opacity: 0.7 })
+            })
+          },
+        })
+
+        choropletheLayer = choroplethLayer
+      }
+    } catch (err) {
+      console.warn('Choropleth data tidak tersedia:', err)
     }
 
     // Zoom ke area Jawa
@@ -321,6 +418,42 @@ const stopThemeObserver = () => {
   }
   window.removeEventListener('storage', syncTheme)
 }
+
+const toggleHeatmap = () => {
+  showHeatmap.value = !showHeatmap.value
+  if (!map || !heatmapLayer) return
+
+  if (showHeatmap.value) {
+    heatmapLayer.addTo(map)
+  } else {
+    map.removeLayer(heatmapLayer)
+  }
+}
+
+const toggleChoropleth = () => {
+  showChoropleth.value = !showChoropleth.value
+  if (!map || !choropletheLayer) return
+
+  if (showChoropleth.value) {
+    choropletheLayer.addTo(map)
+    if (clusterGroupRef) map.removeLayer(clusterGroupRef)
+    if (heatmapLayer && map.hasLayer(heatmapLayer)) map.removeLayer(heatmapLayer)
+    displayMode.value = 'choropleth'
+  } else {
+    map.removeLayer(choropletheLayer)
+    if (clusterGroupRef) clusterGroupRef.addTo(map)
+    displayMode.value = 'points'
+  }
+}
+
+const changeChoroplethMetric = (metric) => {
+  choroplethMetric.value = metric
+  // Reload choropleth dengan metric baru
+  if (choropletheLayer && map.hasLayer(choropletheLayer)) {
+    map.removeLayer(choropletheLayer)
+    toggleChoropleth()
+  }
+}
 </script>
 
 <template>
@@ -330,6 +463,82 @@ const stopThemeObserver = () => {
       <p>Memuat peta...</p>
     </div>
     <div v-if="error" class="error-message">⚠️ {{ error }}</div>
+
+    <!-- Heatmap Toggle Control -->
+    <div class="heatmap-control">
+      <button
+        @click="toggleHeatmap"
+        :class="['heatmap-toggle-btn', { active: showHeatmap }]"
+        title="Tampilkan/Sembunyikan Heatmap Kepadatan Santri Berdasarkan Tingkat Kebutuhan Ekonomi"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="icon"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z"
+          />
+        </svg>
+        <span class="btn-text">Heatmap</span>
+      </button>
+      <div class="heatmap-info" v-if="showHeatmap">
+        <p class="info-text">Menampilkan kepadatan santri berdasarkan tingkat kebutuhan</p>
+      </div>
+    </div>
+
+    <!-- Choropleth Toggle & Filter Control -->
+    <div class="choropleth-control">
+      <button
+        @click="toggleChoropleth"
+        :class="['choropleth-toggle-btn', { active: showChoropleth }]"
+        title="Tampilkan/Sembunyikan Choropleth Map (Aggregasi per Kabupaten)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="icon"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 6.75V15m6-6v8.25m.503-6.257l2.707-2.707a1.5 1.5 0 00-2.12-2.12l-2.707 2.707m3.427 3.427l2.707-2.707a1.5 1.5 0 10-2.121-2.121l-2.707 2.707m3.427 3.427l-2.707 2.707a1.5 1.5 0 01-2.121-2.12l2.707-2.707m0-3.427l-2.707-2.707a1.5 1.5 0 00-2.121 2.12l2.707 2.707"
+          />
+        </svg>
+        <span class="btn-text">Choropleth</span>
+      </button>
+      <div class="choropleth-info" v-if="showChoropleth">
+        <p class="info-label">Tampilkan berdasarkan:</p>
+        <div class="metric-buttons">
+          <button
+            @click="changeChoroplethMetric('count')"
+            :class="['metric-btn', { active: choroplethMetric === 'count' }]"
+          >
+            Jumlah Santri
+          </button>
+          <button
+            @click="changeChoroplethMetric('avg_score')"
+            :class="['metric-btn', { active: choroplethMetric === 'avg_score' }]"
+          >
+            Rata-rata Skor
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="map"></div>
     <AdminBoundaryLayers ref="boundaryLayersRef" />
   </div>
@@ -482,10 +691,190 @@ const stopThemeObserver = () => {
   color: #cbd5e1;
 }
 
+/* Heatmap Toggle Control */
+.heatmap-control {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Choropleth Toggle Control */
+.choropleth-control {
+  position: absolute;
+  top: 20px;
+  right: 280px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.choropleth-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.choropleth-toggle-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.choropleth-toggle-btn .btn-text {
+  user-select: none;
+}
+
+.choropleth-info {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  max-width: 220px;
+}
+
+.choropleth-info .info-label {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  text-align: right;
+}
+
+.metric-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-btn {
+  padding: 6px 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.metric-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.metric-btn.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: white;
+}
+
+:global(.dark) .choropleth-info {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .choropleth-info .info-label {
+  color: #94a3b8;
+}
+
+:global(.dark) .choropleth-toggle-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+:global(.dark) .choropleth-toggle-btn:hover {
+  border-color: #475569;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .choropleth-toggle-btn.active {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  color: white;
+}
+
+:global(.dark) .metric-btn {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+:global(.dark) .metric-btn:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+:global(.dark) .metric-btn.active {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  color: white;
+}
+
 /* Responsive */
+@media (max-width: 1024px) {
+  .choropleth-control {
+    right: 240px;
+  }
+}
+
 @media (max-width: 768px) {
   .map-container {
     height: calc(100vh - 60px);
+  }
+
+  .heatmap-control,
+  .choropleth-control {
+    top: 10px;
+    right: 10px;
+  }
+
+  .heatmap-toggle-btn,
+  .choropleth-toggle-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .heatmap-toggle-btn .icon,
+  .choropleth-toggle-btn .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .heatmap-info,
+  .choropleth-info {
+    max-width: 180px;
+  }
+
+  .heatmap-info .info-text {
+    font-size: 10px;
+  }
+
+  .choropleth-info .info-label {
+    font-size: 10px;
+  }
+
+  .metric-btn {
+    font-size: 10px;
+    padding: 5px 8px;
   }
 }
 </style>
