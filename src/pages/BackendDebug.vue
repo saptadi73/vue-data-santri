@@ -17,6 +17,7 @@ import {
 } from '@/utils/advancedDebug'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const ENV_MODE = import.meta.env.MODE
 const testResults = ref([])
 const isTestRunning = ref(false)
 const selectedTest = ref('connection')
@@ -129,9 +130,7 @@ const copyCommand = (key) => {
           </p>
           <p class="text-sm">
             <span class="font-medium">Environment:</span>
-            <code class="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">{{
-              import.meta.env.MODE
-            }}</code>
+            <code class="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">{{ ENV_MODE }}</code>
           </p>
         </div>
       </div>

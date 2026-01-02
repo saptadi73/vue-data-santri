@@ -24,6 +24,51 @@ const router = createRouter({
       component: () => import('@/pages/PesantrenMap.vue'),
     },
     {
+      path: '/nl2sql',
+      name: 'nl2sql',
+      component: () => import('@/pages/NL2SQLPage.vue'),
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('@/pages/Dashboard.vue'),
+    },
+    {
+      path: '/sebaran-santri',
+      name: 'sebaran-santri',
+      component: () => import('@/pages/SebaranSantri.vue'),
+    },
+    {
+      path: '/distribusi-bantuan',
+      name: 'distribusi-bantuan',
+      component: () => import('@/pages/DistribusiBantuan.vue'),
+    },
+    {
+      path: '/program-pendidikan-santri',
+      name: 'program-pendidikan-santri',
+      component: () => import('@/pages/ProgramPendidikanSantri.vue'),
+    },
+    {
+      path: '/program-kesejahteraan-santri',
+      name: 'program-kesejahteraan-santri',
+      component: () => import('@/pages/ProgramKesejahteraanSantri.vue'),
+    },
+    {
+      path: '/program-kesehatan-santri',
+      name: 'program-kesehatan-santri',
+      component: () => import('@/pages/ProgramKesehatanSantri.vue'),
+    },
+    {
+      path: '/program-infrastruktur-pesantren',
+      name: 'program-infrastruktur-pesantren',
+      component: () => import('@/pages/ProgramInfrastrukturPesantren.vue'),
+    },
+    {
+      path: '/program-kemandirian-ekonomi',
+      name: 'program-kemandirian-ekonomi',
+      component: () => import('@/pages/ProgramKemandirianEkonomi.vue'),
+    },
+    {
       path: '/backend-debug',
       name: 'backend-debug',
       component: () => import('@/pages/BackendDebug.vue'),

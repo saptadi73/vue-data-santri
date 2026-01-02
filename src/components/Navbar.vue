@@ -71,7 +71,11 @@ onBeforeUnmount(() => {
         <div
           class="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/50 bg-cyan-500/10 text-cyan-300 shadow-inner shadow-cyan-500/20"
         >
-          <span class="icon text-2xl">workspace_premium</span>
+          <img
+            src="@/assets/images/logo_bantuan_santri.png"
+            alt="Logo Bantuan Santri"
+            class="h-9 w-9 rounded-full bg-white p-1 object-contain shadow"
+          />
         </div>
         <div class="leading-tight">
           <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -126,22 +130,32 @@ onBeforeUnmount(() => {
           >
             <div
               v-if="openDropdown === 'program'"
-              class="absolute left-0 mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white/95 text-slate-800 shadow-xl backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100"
+              class="absolute left-0 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white/95 text-slate-800 shadow-xl backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100"
             >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#program-1"
-                >Program 1</RouterLink
+                to="/program-pendidikan-santri"
+                >Program Pendidikan Santri</RouterLink
               >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#program-2"
-                >Program 2</RouterLink
+                to="/program-kesejahteraan-santri"
+                >Program Kesejahteraan Santri</RouterLink
               >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#program-3"
-                >Program 3</RouterLink
+                to="/program-kesehatan-santri"
+                >Program Kesehatan Santri</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/program-infrastruktur-pesantren"
+                >Program Infrastruktur Pesantren</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/program-kemandirian-ekonomi"
+                >Program Kemandirian Ekonomi</RouterLink
               >
             </div>
           </Transition>
@@ -223,6 +237,11 @@ onBeforeUnmount(() => {
             >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/dashboard"
+                >Dashboard Analytics</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
                 to="/peta-santri"
                 >Peta Santri</RouterLink
               >
@@ -233,23 +252,18 @@ onBeforeUnmount(() => {
               >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#sebaran-santri"
+                to="/nl2sql"
+                >AI Query</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/sebaran-santri"
                 >Sebaran Santri</RouterLink
               >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#data-donatur"
-                >Data Donatur</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#distribusi-bantuan"
+                to="/distribusi-bantuan"
                 >Distribusi Bantuan</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/beranda#klasifikasi-bantuan"
-                >Klasifikasi Bantuan</RouterLink
               >
             </div>
           </Transition>

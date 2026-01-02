@@ -43,9 +43,7 @@ export const getSantriList = async (params = {}) => {
     console.error('❌ Error:', error.message)
     console.groupEnd()
     if (error.message.includes('fetch')) {
-      throw new Error(
-        'Tidak dapat terhubung ke server. Pastikan API berjalan di http://localhost:8000',
-      )
+      throw new Error(`Tidak dapat terhubung ke server. Pastikan API berjalan di ${API_BASE_URL}`)
     }
     throw error
   }

@@ -7,6 +7,7 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import AdminBoundaryLayers from './AdminBoundaryLayers.vue'
+import NL2SQLWidget from '@/components/NL2SQLWidget.vue'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const USE_DUMMY_DATA = false // Set false jika backend sudah ready + CORS configured
@@ -25,6 +26,16 @@ const showHeatmap = ref(true)
 const showChoropleth = ref(false)
 const choroplethMetric = ref('count') // 'count', 'avg_score'
 const displayMode = ref('points') // 'points', 'heatmap', 'choropleth'
+
+const showNL2SQLWidget = ref(false)
+const pesantrenQueries = [
+  'Top 10 pesantren terbaik',
+  'Pesantren berkategori sangat layak',
+  'Jumlah pesantren per provinsi',
+  'Rata-rata skor pesantren',
+  'Pesantren di Jawa Timur',
+  'Pesantren dengan fasilitas lengkap',
+]
 
 // Data dummy untuk testing
 const dummyGeoData = {
@@ -145,7 +156,13 @@ onMounted(async () => {
 
         // Backend membungkus GeoJSON dalam object data
         geo = geoData.data || geoData
+
+        // Debug: log first feature to see structure
+        if (geo.features && geo.features.length > 0) {
+          console.log('Sample pesantren feature properties:', geo.features[0].properties)
+        }
       } catch (fetchError) {
+        console.error('Error fetching pesantren points:', fetchError)
         throw new Error(`Backend API tidak dapat diakses. Pastikan server berjalan di ${API_BASE}`)
       }
 
@@ -154,14 +171,16 @@ onMounted(async () => {
         if (!heatResponse.ok) throw new Error(`Gagal memuat heatmap (${heatResponse.status})`)
         const heatData = await heatResponse.json()
 
-        // Backend mengirim FeatureCollection, extract ke array format [lat, lng, intensity]
-        const heatFeatures = heatData.data?.features || heatData.features || []
-        heat = heatFeatures.map((f) => ({
-          lat: f.geometry.coordinates[1],
-          lng: f.geometry.coordinates[0],
-          weight: f.properties.intensity || 0,
+        // Backend mengirim array langsung atau wrapped dalam data property
+        const heatArray = Array.isArray(heatData) ? heatData : heatData.data || []
+        heat = heatArray.map((f) => ({
+          lat: f.lat,
+          lng: f.lng,
+          weight: f.weight || f.skor || f.score || 0,
         }))
+        console.log('✅ Loaded pesantren heatmap data points:', heat.length)
       } catch (fetchError) {
+        console.error('Error fetching pesantren heatmap:', fetchError)
         throw new Error(`Gagal mengambil data heatmap dari ${API_BASE}`)
       }
     }
@@ -207,8 +226,8 @@ onMounted(async () => {
     const pesantrenLayer = L.geoJSON(geo, {
       pointToLayer: (feature, latlng) => {
         const p = feature.properties || {}
-        // Backend menggunakan 'category', map ke akreditasi
-        const akreditasi = p.akreditasi || p.category
+        // Backend bisa menggunakan berbagai field names untuk kategori
+        const akreditasi = p.akreditasi || p.category || p.kelayakan || p.kategori
         return L.marker(latlng, {
           icon: createPesantrenIcon(akreditasi),
           pane: 'pesantrenPane',
@@ -216,18 +235,19 @@ onMounted(async () => {
       },
       onEachFeature: (feature, layer) => {
         const p = feature.properties
-        // Backend menggunakan 'name', 'category', 'students'
-        const nama = p.nama || p.name
-        const akreditasi = p.akreditasi || p.category
-        const jumlahSantri = p.jumlah_santri || p.students || 0
+        // Backend bisa menggunakan berbagai field names
+        const nama = p.nama || p.name || p.nama_pesantren || 'Tidak ada nama'
+        const akreditasi = p.akreditasi || p.category || p.kelayakan || p.kategori || 'N/A'
+        const jumlahSantri = p.jumlah_santri || p.students || p.total_santri || 0
+        const score = p.score || p.skor || p.total_score || 0
 
         layer.bindPopup(
           `
           <div class="pesantren-popup">
-            <strong class="pesantren-popup__title">${nama || 'Tidak ada nama'}</strong><br/>
-            <span class="pesantren-popup__label">Kelayakan:</span> <strong>${akreditasi || 'N/A'}</strong><br/>
+            <strong class="pesantren-popup__title">${nama}</strong><br/>
+            <span class="pesantren-popup__label">Kategori Kelayakan:</span> <strong>${akreditasi}</strong><br/>
             <span class="pesantren-popup__label">Santri:</span> <strong>${jumlahSantri}</strong><br/>
-            <span class="pesantren-popup__label">Skor:</span> <strong>${p.score || 0}</strong>
+            <span class="pesantren-popup__label">Skor:</span> <strong>${score}</strong>
           </div>
         `,
           { className: 'pesantren-popup' },
@@ -371,21 +391,21 @@ onMounted(async () => {
       const div = L.DomUtil.create('div', 'info legend')
       div.innerHTML = `
         <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 12px;">
-          <strong style="display: block; margin-bottom: 8px;">Akreditasi Pesantren</strong>
+          <strong style="display: block; margin-bottom: 8px;">Kategori Kelayakan Pesantren</strong>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 14px; height: 14px; background: #10b981; border-radius: 50%; margin-right: 6px; border: 2px solid #059669;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #10b981; border-radius: 50%; margin-right: 6px; border: 1px solid #059669;"></span>
             <span>A - Sangat Baik</span>
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 14px; height: 14px; background: #f59e0b; border-radius: 50%; margin-right: 6px; border: 2px solid #d97706;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #f59e0b; border-radius: 50%; margin-right: 6px; border: 1px solid #d97706;"></span>
             <span>B - Baik</span>
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 14px; height: 14px; background: #ef4444; border-radius: 50%; margin-right: 6px; border: 2px solid #dc2626;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 6px; border: 1px solid #dc2626;"></span>
             <span>C - Cukup</span>
           </div>
           <div style="display: flex; align-items: center;">
-            <span style="display: inline-block; width: 14px; height: 14px; background: #9ca3af; border-radius: 50%; margin-right: 6px; border: 2px solid #6b7280;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #9ca3af; border-radius: 50%; margin-right: 6px; border: 1px solid #6b7280;"></span>
             <span>Tidak ada data</span>
           </div>
         </div>
@@ -579,6 +599,45 @@ const changeChoroplethMetric = (metric) => {
             Rata-rata Skor
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- NL2SQL Query Widget Button -->
+    <button
+      @click="showNL2SQLWidget = !showNL2SQLWidget"
+      class="nl2sql-toggle-btn"
+      :class="{ active: showNL2SQLWidget }"
+      title="Natural Language Query untuk Pesantren"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="icon"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+        />
+      </svg>
+      <span class="btn-text">AI Query</span>
+    </button>
+
+    <!-- NL2SQL Widget Panel -->
+    <div v-if="showNL2SQLWidget" class="nl2sql-panel">
+      <div class="panel-header">
+        <h3>Natural Language Query - Pesantren</h3>
+        <button @click="showNL2SQLWidget = false" class="close-btn">×</button>
+      </div>
+      <div class="panel-content">
+        <NL2SQLWidget
+          compact
+          :suggestedQueries="pesantrenQueries"
+          placeholder="Tanyakan tentang data pesantren..."
+        />
       </div>
     </div>
 
@@ -883,6 +942,101 @@ const changeChoroplethMetric = (metric) => {
   background: #8b5cf6;
   border-color: #8b5cf6;
   color: white;
+}
+
+/* NL2SQL Toggle Button */
+.nl2sql-toggle-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nl2sql-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.nl2sql-toggle-btn.active {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.nl2sql-toggle-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* NL2SQL Widget Panel */
+.nl2sql-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  z-index: 1000;
+  width: 450px;
+  max-height: 70vh;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.panel-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+:global(.dark) .nl2sql-panel {
+  background: #1e293b;
 }
 
 /* Responsive */

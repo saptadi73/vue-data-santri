@@ -7,6 +7,7 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import AdminBoundaryLayers from './AdminBoundaryLayers.vue'
+import NL2SQLWidget from '@/components/NL2SQLWidget.vue'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const USE_DUMMY_DATA = false // Set false jika backend sudah ready + CORS configured
@@ -25,6 +26,16 @@ const showHeatmap = ref(true)
 const showChoropleth = ref(false)
 const choroplethMetric = ref('count') // 'count', 'avg_score'
 const displayMode = ref('points') // 'points', 'heatmap', 'choropleth'
+
+const showNL2SQLWidget = ref(false)
+const santriQueries = [
+  'Santri miskin di Jawa Barat',
+  'Top 10 santri dengan skor tertinggi',
+  'Jumlah santri per kategori',
+  'Rata-rata skor santri',
+  'Santri dari Bandung',
+  'Distribusi santri per provinsi',
+]
 
 // Data dummy untuk testing
 const dummyGeoData = {
@@ -105,7 +116,15 @@ onMounted(async () => {
 
         // Backend membungkus GeoJSON dalam object data
         geo = geoData.data || geoData
+
+        // NOTE: Backend API /gis/santri-points harus mengirim field ekonomi dan score
+        // Lihat BACKEND_FIX_NEEDED.md untuk detail
+        console.log('✅ Loaded santri GeoJSON features:', geo.features?.length || 0)
+        if (geo.features && geo.features.length > 0) {
+          console.log('Sample properties:', geo.features[0].properties)
+        }
       } catch (fetchError) {
+        console.error('Error fetching santri points:', fetchError)
         throw new Error(`Backend API tidak dapat diakses. Pastikan server berjalan di ${API_BASE}`)
       }
 
@@ -114,14 +133,16 @@ onMounted(async () => {
         if (!heatResponse.ok) throw new Error(`Gagal memuat heatmap (${heatResponse.status})`)
         const heatData = await heatResponse.json()
 
-        // Backend mengirim FeatureCollection, extract ke array format [lat, lng, intensity]
-        const heatFeatures = heatData.data?.features || heatData.features || []
-        heat = heatFeatures.map((f) => ({
-          lat: f.geometry.coordinates[1],
-          lng: f.geometry.coordinates[0],
-          weight: f.properties.intensity || 0,
+        // Backend mengirim array langsung atau wrapped dalam data property
+        const heatArray = Array.isArray(heatData) ? heatData : heatData.data || []
+        heat = heatArray.map((f) => ({
+          lat: f.lat,
+          lng: f.lng,
+          weight: f.weight || f.skor || f.score || 0,
         }))
+        console.log('✅ Loaded heatmap data points:', heat.length)
       } catch (fetchError) {
+        console.error('Error fetching heatmap:', fetchError)
         throw new Error(`Gagal mengambil data heatmap dari ${API_BASE}`)
       }
     }
@@ -166,8 +187,8 @@ onMounted(async () => {
     const santriLayer = L.geoJSON(geo, {
       pointToLayer: (feature, latlng) => {
         const p = feature.properties || {}
-        // Backend menggunakan 'category', map ke ekonomi
-        const ekonomi = p.ekonomi || p.category
+        // Backend bisa menggunakan berbagai field names untuk kategori ekonomi
+        const ekonomi = p.ekonomi || p.category || p.kategori_ekonomi || p.status_ekonomi
         return L.marker(latlng, {
           icon: createSantriIcon(ekonomi),
           pane: 'santriPane',
@@ -175,16 +196,21 @@ onMounted(async () => {
       },
       onEachFeature: (feature, layer) => {
         const p = feature.properties
-        // Backend menggunakan 'name' dan 'category'
-        const nama = p.nama || p.name
-        const ekonomi = p.ekonomi || p.category
+        // Backend bisa menggunakan berbagai field names
+        const nama = p.nama || p.name || p.nama_lengkap || 'Tidak ada nama'
+        const ekonomi = p.ekonomi || p.category || p.kategori_ekonomi || p.status_ekonomi || 'N/A'
+        const score = p.score || p.skor || p.total_score || 0
+
+        // NOTE: Jika ekonomi dan score masih "N/A" dan 0,
+        // berarti backend API belum mengirim field tersebut.
+        // Lihat BACKEND_FIX_NEEDED.md untuk solusi
 
         layer.bindPopup(
           `
           <div class="santri-popup">
-            <strong class="santri-popup__title">${nama || 'Tidak ada nama'}</strong><br/>
-            <span class="santri-popup__label">Ekonomi:</span> <strong>${ekonomi || 'N/A'}</strong><br/>
-            <span class="santri-popup__label">Skor:</span> <strong>${p.score || 0}</strong>
+            <strong class="santri-popup__title">${nama}</strong><br/>
+            <span class="santri-popup__label">Ekonomi:</span> <strong>${ekonomi}</strong><br/>
+            <span class="santri-popup__label">Skor:</span> <strong>${score}</strong>
           </div>
         `,
           { className: 'santri-popup' },
@@ -330,19 +356,19 @@ onMounted(async () => {
         <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 12px;">
           <strong style="display: block; margin-bottom: 8px;">Level Ekonomi Santri</strong>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #ef4444; border-radius: 50%; margin-right: 6px; border: 2px solid #dc2626;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 6px; border: 1px solid #dc2626;"></span>
             <span>Miskin</span>
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #fbbf24; border-radius: 50%; margin-right: 6px; border: 2px solid #f59e0b;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #fbbf24; border-radius: 50%; margin-right: 6px; border: 1px solid #f59e0b;"></span>
             <span>Rentan</span>
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #9ca3af; border-radius: 50%; margin-right: 6px; border: 2px solid #6b7280;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #9ca3af; border-radius: 50%; margin-right: 6px; border: 1px solid #6b7280;"></span>
             <span>Cukup</span>
           </div>
           <div style="display: flex; align-items: center;">
-            <span style="display: inline-block; width: 12px; height: 12px; background: #d1d5db; border-radius: 50%; margin-right: 6px; border: 2px solid #9ca3af;"></span>
+            <span style="display: inline-block; width: 10px; height: 10px; background: #d1d5db; border-radius: 50%; margin-right: 6px; border: 1px solid #9ca3af;"></span>
             <span>Tidak ada data</span>
           </div>
         </div>
@@ -493,7 +519,7 @@ const changeChoroplethMetric = (metric) => {
         <span class="btn-text">Heatmap</span>
       </button>
       <div class="heatmap-info" v-if="showHeatmap">
-        <p class="info-text">Menampilkan kepadatan santri berdasarkan tingkat kebutuhan</p>
+        <p class="info-text">Menampilkan intensitas level ekonomi santri</p>
       </div>
     </div>
 
@@ -536,6 +562,84 @@ const changeChoroplethMetric = (metric) => {
             Rata-rata Skor
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- NL2SQL Query Widget Button -->
+    <button
+      @click="showNL2SQLWidget = !showNL2SQLWidget"
+      class="nl2sql-toggle-btn"
+      :class="{ active: showNL2SQLWidget }"
+      title="Natural Language Query untuk Santri"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="icon"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+        />
+      </svg>
+      <span class="btn-text">AI Query</span>
+    </button>
+
+    <!-- NL2SQL Widget Panel -->
+    <div v-if="showNL2SQLWidget" class="nl2sql-panel">
+      <div class="panel-header">
+        <h3>Natural Language Query - Santri</h3>
+        <button @click="showNL2SQLWidget = false" class="close-btn">×</button>
+      </div>
+      <div class="panel-content">
+        <NL2SQLWidget
+          compact
+          :suggestedQueries="santriQueries"
+          placeholder="Tanyakan tentang data santri..."
+        />
+      </div>
+    </div>
+
+    <!-- NL2SQL Query Widget Button -->
+    <button
+      @click="showNL2SQLWidget = !showNL2SQLWidget"
+      class="nl2sql-toggle-btn"
+      :class="{ active: showNL2SQLWidget }"
+      title="Natural Language Query untuk Santri"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="icon"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+        />
+      </svg>
+      <span class="btn-text">AI Query</span>
+    </button>
+
+    <!-- NL2SQL Widget Panel -->
+    <div v-if="showNL2SQLWidget" class="nl2sql-panel">
+      <div class="panel-header">
+        <h3>Natural Language Query - Santri</h3>
+        <button @click="showNL2SQLWidget = false" class="close-btn">×</button>
+      </div>
+      <div class="panel-content">
+        <NL2SQLWidget
+          compact
+          :suggestedQueries="santriQueries"
+          placeholder="Tanyakan tentang data santri..."
+        />
       </div>
     </div>
 
@@ -829,6 +933,101 @@ const changeChoroplethMetric = (metric) => {
   color: white;
 }
 
+/* NL2SQL Toggle Button */
+.nl2sql-toggle-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nl2sql-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.nl2sql-toggle-btn.active {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.nl2sql-toggle-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* NL2SQL Widget Panel */
+.nl2sql-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  z-index: 1000;
+  width: 450px;
+  max-height: 70vh;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.panel-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+:global(.dark) .nl2sql-panel {
+  background: #1e293b;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .choropleth-control {
@@ -855,8 +1054,8 @@ const changeChoroplethMetric = (metric) => {
 
   .heatmap-toggle-btn .icon,
   .choropleth-toggle-btn .icon {
-    width: 18px;
-    height: 18px;
+    width: 10px;
+    height: 10px;
   }
 
   .heatmap-info,
