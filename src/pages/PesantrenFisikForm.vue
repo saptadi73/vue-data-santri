@@ -191,7 +191,8 @@
                 <option value="">Pilih fasilitas MCK</option>
                 <option value="lengkap">Lengkap</option>
                 <option value="kurang_lengkap">Kurang Lengkap</option>
-                <option value="tidak_ada">Tidak Ada</option>
+                <option value="cukup">Cukup</option>
+                <option value="tidak_layak">Tidak Layak</option>
               </select>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
@@ -336,13 +337,17 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Sumber Listrik <span class="text-red-600">*</span>
               </label>
-              <input
+              <select
                 v-model="formData.sumber_listrik"
-                type="text"
                 required
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Contoh: PLN, Generator"
-              />
+              >
+                <option value="">Pilih sumber listrik</option>
+                <option value="PLN">PLN</option>
+                <option value="genset">Genset</option>
+                <option value="tenaga_surya">Tenaga Surya</option>
+                <option value="listrik_tidak_ada">Tidak Ada</option>
+              </select>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

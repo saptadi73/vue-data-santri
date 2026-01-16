@@ -57,6 +57,22 @@
                 {{ kab }}
               </option>
             </select>
+            <button
+              @click="handleBatchScore"
+              :disabled="pondokList.length === 0 || batchScoringInProgress"
+              title="Hitung score untuk semua pondok pesantren secara batch"
+              class="bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap transition-colors"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              Batch Score
+            </button>
             <router-link
               to="/pondok/tambah"
               class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap"
@@ -346,12 +362,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Progress Modal for Batch Scoring -->
+    <ProgressModal
+      :is-visible="showBatchScoringModal"
+      :title="'Batch Scoring Pondok Pesantren'"
+      :is-processing="batchScoringInProgress"
+      :status-message="batchScoringStatus"
+      :progress-percent="batchScoringProgress"
+      :is-success="batchScoringSuccess"
+      :is-error="batchScoringError"
+      :error-message="batchScoringErrorMsg"
+      :error-details="batchScoringErrorDetails"
+      :result="batchScoringResult"
+      @close="closeBatchScoringModal"
+      @retry="handleBatchScore"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { deletePondok, getPondokList } from '@/services/pondokPesantrenService'
+import ProgressModal from '@/components/ProgressModal.vue'
+import { batchCalculatePesantrenScores, formatBatchResult } from '@/services/bulkScoringService'
 
 const pondokList = ref([])
 const loading = ref(false)
@@ -371,6 +405,17 @@ const pagination = ref({
 const showDeleteModal = ref(false)
 const pondokToDelete = ref(null)
 const deleting = ref(false)
+
+// Batch Scoring State
+const showBatchScoringModal = ref(false)
+const batchScoringInProgress = ref(false)
+const batchScoringSuccess = ref(false)
+const batchScoringError = ref(false)
+const batchScoringStatus = ref('Menghitung score pondok pesantren...')
+const batchScoringProgress = ref(0)
+const batchScoringErrorMsg = ref('')
+const batchScoringErrorDetails = ref('')
+const batchScoringResult = ref(null)
 
 let searchTimeout = null
 
@@ -508,6 +553,72 @@ const handleDelete = async () => {
   } finally {
     deleting.value = false
   }
+}
+
+// Batch Scoring Methods
+const handleBatchScore = async () => {
+  // Reset state
+  showBatchScoringModal.value = true
+  batchScoringInProgress.value = true
+  batchScoringSuccess.value = false
+  batchScoringError.value = false
+  batchScoringStatus.value = 'Menghitung score pondok pesantren...'
+  batchScoringProgress.value = 0
+  batchScoringErrorMsg.value = ''
+  batchScoringErrorDetails.value = ''
+  batchScoringResult.value = null
+
+  try {
+    // Simulate progress updates (since API doesn't provide real-time progress)
+    const progressInterval = setInterval(() => {
+      if (batchScoringProgress.value < 90) {
+        batchScoringProgress.value += Math.random() * 20
+      }
+    }, 500)
+
+    console.log('🟡 Starting batch scoring for all pondok pesantren...')
+    const result = await batchCalculatePesantrenScores()
+
+    clearInterval(progressInterval)
+    batchScoringProgress.value = 100
+
+    // Format result untuk display
+    const formattedResult = formatBatchResult(result)
+
+    console.log('🟢 Batch scoring success:', formattedResult)
+
+    batchScoringResult.value = formattedResult
+    batchScoringSuccess.value = true
+    batchScoringInProgress.value = false
+
+    // Auto reload data setelah 2 detik
+    setTimeout(() => {
+      loadPondokData()
+    }, 2000)
+  } catch (err) {
+    console.error('🔴 Batch scoring error:', err)
+
+    batchScoringError.value = true
+    batchScoringInProgress.value = false
+    batchScoringErrorMsg.value =
+      err.message || 'Gagal menghitung score. Pastikan server API berjalan dengan baik.'
+    batchScoringErrorDetails.value = err.stack || ''
+  }
+}
+
+const closeBatchScoringModal = () => {
+  showBatchScoringModal.value = false
+  // Reset state setelah modal ditutup
+  setTimeout(() => {
+    batchScoringInProgress.value = false
+    batchScoringSuccess.value = false
+    batchScoringError.value = false
+    batchScoringStatus.value = 'Menghitung score pondok pesantren...'
+    batchScoringProgress.value = 0
+    batchScoringErrorMsg.value = ''
+    batchScoringErrorDetails.value = ''
+    batchScoringResult.value = null
+  }, 300)
 }
 
 onMounted(() => {

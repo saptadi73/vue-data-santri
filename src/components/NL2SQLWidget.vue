@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import VueApexCharts from 'vue3-apexcharts'
 import { executeQuery, getIntents } from '@/services/nl2sqlService'
 
 const props = defineProps({
@@ -23,6 +24,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['result', 'error'])
+const ApexChart = VueApexCharts
 
 // State
 const query = ref('')
@@ -32,6 +34,7 @@ const error = ref(null)
 const queryHistory = ref([])
 const intents = ref([])
 const showSuggestions = ref(false)
+const chartType = ref('bar')
 
 // Get suggestions from intents
 const fetchIntents = async () => {
@@ -113,6 +116,150 @@ const formattedResult = computed(() => {
   }
 })
 
+// Transform tabular result into ApexCharts-friendly data
+const chartData = computed(() => {
+  if (!formattedResult.value?.isArray || !formattedResult.value.data.length) return null
+
+  const rows = formattedResult.value.data
+  // Filter out ID, UUID, dan coordinate columns
+  const allKeys = Object.keys(rows[0])
+  
+  // Check if result has coordinate data (untuk map visualization)
+  const hasCoordinates =
+    allKeys.some((k) => k.toLowerCase().includes('latitude') || k.toLowerCase().includes('lat')) &&
+    allKeys.some((k) => k.toLowerCase().includes('longitude') || k.toLowerCase().includes('lng'))
+  
+  // Jika ada koordinat, jangan tampilkan chart (karena akan ditampilkan di map)
+  if (hasCoordinates) {
+    return null
+  }
+  
+  const keys = allKeys.filter(
+    (k) =>
+      !k.toLowerCase().includes('id') &&
+      !k.toLowerCase().includes('uuid') &&
+      !k.toLowerCase().includes('latitude') &&
+      !k.toLowerCase().includes('lat') &&
+      !k.toLowerCase().includes('longitude') &&
+      !k.toLowerCase().includes('lng'),
+  )
+
+  if (keys.length < 2) return null
+
+  // Prioritize name/category columns for labels
+  const nameColumns = [
+    'nama_santri',
+    'nama',
+    'name',
+    'nama_pesantren',
+    'pesantren',
+    'kategori_kemiskinan',
+    'kategori',
+    'provinsi',
+  ]
+  const labelKey = keys.find((key) => nameColumns.includes(key.toLowerCase())) || keys[0]
+
+  // Find numeric column for values (exclude score if it's coordinate data)
+  const valueKey =
+    keys.find((key) => {
+      const value = rows[0][key]
+      return typeof value === 'number' || !isNaN(Number(value))
+    }) || keys[1]
+
+  const labels = rows.map((row) => String(row[labelKey] || 'N/A'))
+  const values = rows.map((row) => {
+    const val = row[valueKey]
+    return typeof val === 'number' ? val : Number(val) || 0
+  })
+
+  return {
+    labels,
+    values,
+    labelKey,
+    valueKey,
+  }
+})
+
+const chartSeries = computed(() => {
+  if (!chartData.value) return []
+  if (chartType.value === 'pie') {
+    return chartData.value.values
+  }
+  return [
+    {
+      name: chartData.value.valueKey,
+      data: chartData.value.values,
+    },
+  ]
+})
+
+const chartOptions = computed(() => {
+  if (!chartData.value) return {}
+
+  const common = {
+    dataLabels: { enabled: true },
+    legend: { position: 'bottom', show: true },
+  }
+
+  if (chartType.value === 'pie') {
+    return {
+      ...common,
+      labels: chartData.value.labels || [],
+      chart: {
+        id: 'nl2sql-pie',
+        type: 'pie',
+        toolbar: { show: false },
+      },
+      tooltip: {
+        y: {
+          formatter: (val) => val,
+        },
+      },
+    }
+  }
+
+  const isLine = chartType.value === 'line'
+  const baseConfig = {
+    ...common,
+    chart: {
+      id: isLine ? 'nl2sql-line' : 'nl2sql-bar',
+      type: chartType.value,
+      toolbar: { show: false },
+    },
+    xaxis: {
+      categories: chartData.value.labels || [],
+      title: { text: chartData.value.labelKey },
+    },
+    yaxis: {
+      title: { text: chartData.value.valueKey },
+    },
+    tooltip: {
+      y: {
+        formatter: (val) => val,
+      },
+    },
+  }
+
+  if (isLine) {
+    baseConfig.stroke = { curve: 'smooth', width: 3 }
+    baseConfig.markers = {
+      size: 5,
+      strokeWidth: 2,
+      hover: {
+        size: 7,
+        sizeOffset: 3,
+      },
+    }
+  } else {
+    baseConfig.plotOptions = {
+      bar: { borderRadius: 4, horizontal: false },
+    }
+    baseConfig.stroke = { show: true, width: 1 }
+  }
+
+  return baseConfig
+})
+
 // Intent badge color
 const getIntentColor = (intent) => {
   const colors = {
@@ -126,6 +273,26 @@ const getIntentColor = (intent) => {
     scoring: 'indigo',
   }
   return colors[intent?.toLowerCase()] || 'gray'
+}
+
+// Get visible columns (exclude ID fields)
+const getVisibleColumns = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return []
+  const allKeys = Object.keys(data[0])
+  // Filter out ID columns
+  return allKeys.filter(
+    (key) => !key.toLowerCase().includes('id') && !key.toLowerCase().includes('uuid'),
+  )
+}
+
+// Get visible data (exclude ID columns)
+const getVisibleData = (obj) => {
+  if (!obj || typeof obj !== 'object') return {}
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([key]) => !key.toLowerCase().includes('id') && !key.toLowerCase().includes('uuid'),
+    ),
+  )
 }
 
 onMounted(() => {
@@ -152,7 +319,7 @@ onMounted(() => {
             d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
           />
         </svg>
-        <h3 class="title">AI Query Assistant</h3>
+        <h3 class="title">AI Search</h3>
       </div>
       <button v-if="result" @click="clearResults" class="clear-btn" title="Clear results">
         <svg
@@ -183,7 +350,7 @@ onMounted(() => {
           type="submit"
           class="submit-btn"
           :disabled="isLoading || !query.trim()"
-          :title="isLoading ? 'Processing...' : 'Send query'"
+          :title="isLoading ? 'Processing...' : 'Search'"
         >
           <svg
             v-if="!isLoading"
@@ -269,14 +436,14 @@ onMounted(() => {
           <table class="result-table">
             <thead>
               <tr>
-                <th v-for="key in Object.keys(formattedResult.data[0])" :key="key">
+                <th v-for="key in getVisibleColumns(formattedResult.data)" :key="key">
                   {{ key }}
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(row, index) in formattedResult.data" :key="index">
-                <td v-for="key in Object.keys(row)" :key="key">
+                <td v-for="key in getVisibleColumns(formattedResult.data)" :key="key">
                   {{ row[key] }}
                 </td>
               </tr>
@@ -287,7 +454,7 @@ onMounted(() => {
         <!-- Single Result (Object) -->
         <div v-else-if="!formattedResult.isArray" class="single-result">
           <div
-            v-for="[key, value] in Object.entries(formattedResult.data)"
+            v-for="[key, value] in Object.entries(getVisibleData(formattedResult.data))"
             :key="key"
             class="result-item"
           >
@@ -305,6 +472,31 @@ onMounted(() => {
       <!-- Explanation -->
       <div v-if="result.explanation" class="explanation">
         <p class="explanation-text">{{ result.explanation }}</p>
+      </div>
+
+      <!-- Chart (ApexCharts) -->
+      <div v-if="chartData" class="chart-container">
+        <div class="chart-controls">
+          <span class="chart-label">Chart:</span>
+          <div class="chart-type-switch">
+            <button
+              v-for="type in ['bar', 'line', 'pie']"
+              :key="type"
+              type="button"
+              @click="chartType = type"
+              :class="['chart-type-btn', { active: chartType === type }]"
+            >
+              {{ type.toUpperCase() }}
+            </button>
+          </div>
+        </div>
+        <ApexChart
+          :key="chartType"
+          :type="chartType"
+          height="320"
+          :options="chartOptions"
+          :series="chartSeries"
+        />
       </div>
     </div>
   </div>
@@ -683,6 +875,50 @@ onMounted(() => {
   font-size: 13px;
   color: #64748b;
   font-style: italic;
+}
+
+.chart-container {
+  padding: 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chart-label {
+  font-size: 12px;
+  color: #475569;
+}
+
+.chart-type-switch {
+  display: flex;
+  gap: 6px;
+}
+
+.chart-type-btn {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chart-type-btn:hover:not(.active) {
+  border-color: #cbd5e1;
+}
+
+.chart-type-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
 }
 
 /* Dark mode support */

@@ -1,0 +1,26 @@
+### Test NL2SQL Query - Santri Detail
+POST http://localhost:8000/nl2sql/query
+Content-Type: application/json
+
+{
+  "query": "Tunjukkan 5 santri terbaru dengan nama dan alamat",
+  "explain": true
+}
+
+### Test NL2SQL Query - Santri Miskin
+POST http://localhost:8000/nl2sql/query
+Content-Type: application/json
+
+{
+  "query": "Berapa jumlah santri miskin?",
+  "explain": true
+}
+
+### Test with Production API
+POST https://api-santri.gagakrimang.web.id/nl2sql/query
+Content-Type: application/json
+
+{
+  "query": "Tunjukkan 10 santri terbaru",
+  "explain": true
+}

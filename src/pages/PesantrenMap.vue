@@ -18,6 +18,7 @@ let themeObserver = null
 let heatmapLayer = null
 let choropletheLayer = null
 let clusterGroupRef = null
+let nl2sqlLayerRef = null
 let boundaryLayersRef = ref(null)
 const isLoading = ref(true)
 const error = ref(null)
@@ -36,6 +37,124 @@ const pesantrenQueries = [
   'Pesantren di Jawa Timur',
   'Pesantren dengan fasilitas lengkap',
 ]
+
+const handleNL2SQLResult = async (data) => {
+  if (!map) return
+
+  try {
+    // Remove previous NL2SQL layer if exists
+    if (nl2sqlLayerRef) {
+      map.removeLayer(nl2sqlLayerRef)
+      nl2sqlLayerRef = null
+    }
+
+    // Get query result - check if we have coordinates
+    const result = data.result
+
+    // Check if result has coordinate data
+    const hasCoordinates =
+      Array.isArray(result) &&
+      result.length > 0 &&
+      (result[0].latitude || result[0].lat) &&
+      (result[0].longitude || result[0].lng)
+
+    if (!hasCoordinates) {
+      console.log('Query result tidak memiliki koordinat, skip map visualization')
+      return
+    }
+
+    // Convert result to GeoJSON features
+    const features = result.map((item, index) => {
+      const lat = item.latitude || item.lat
+      const lng = item.longitude || item.lng
+
+      return {
+        type: 'Feature',
+        id: item.id || `nl2sql-${index}`,
+        geometry: {
+          type: 'Point',
+          coordinates: [lng, lat],
+        },
+        properties: { ...item },
+      }
+    })
+
+    const geojson = {
+      type: 'FeatureCollection',
+      features,
+    }
+
+    // Create cluster group for NL2SQL results
+    const nl2sqlCluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 50,
+      iconCreateFunction: (cluster) => {
+        return L.divIcon({
+          html: `<div class="nl2sql-cluster"><span>${cluster.getChildCount()}</span></div>`,
+          className: 'nl2sql-cluster-icon',
+          iconSize: L.point(40, 40),
+        })
+      },
+    })
+
+    // Add markers to cluster
+    const nl2sqlLayer = L.geoJSON(geojson, {
+      pointToLayer: (feature, latlng) => {
+        const p = feature.properties
+        const akreditasi = p.akreditasi || p.kategori || p.status
+
+        // Use highlighted color for NL2SQL results
+        const html = `<span style="box-sizing:border-box;width:20px;height:20px;display:block;border-radius:50%;border:3px solid #8b5cf6;background:#a78bfa;box-shadow:0 0 10px rgba(139,92,246,0.6)"></span>`
+
+        return L.marker(latlng, {
+          icon: L.divIcon({
+            className: 'nl2sql-marker',
+            html,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            popupAnchor: [0, -10],
+          }),
+          pane: 'santriPane',
+        })
+      },
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties
+        const nama = p.nama_pesantren || p.nama || p.name || 'Tidak ada nama'
+        const akreditasi = p.akreditasi || p.kategori || 'Tidak ada data'
+        const skor = p.skor_total || p.skor || p.score || 'N/A'
+        const provinsi = p.provinsi || '-'
+        const kabupaten = p.kabupaten || '-'
+
+        const popupContent = `
+          <div class="nl2sql-popup">
+            <div class="popup-badge">AI Result</div>
+            <h4>${nama}</h4>
+            <div class="popup-info">
+              <p><strong>Akreditasi:</strong> ${akreditasi}</p>
+              <p><strong>Skor:</strong> ${skor}</p>
+              <p><strong>Lokasi:</strong> ${kabupaten}, ${provinsi}</p>
+            </div>
+          </div>
+        `
+        layer.bindPopup(popupContent, { pane: 'popupPane' })
+      },
+    })
+
+    nl2sqlLayer.addTo(nl2sqlCluster)
+    nl2sqlCluster.addTo(map)
+    nl2sqlLayerRef = nl2sqlCluster
+
+    // Fit bounds to show all results
+    if (features.length > 0) {
+      const bounds = L.geoJSON(geojson).getBounds()
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 })
+    }
+
+    console.log(`✅ Menampilkan ${features.length} hasil NL2SQL di peta`)
+  } catch (error) {
+    console.error('Error displaying NL2SQL results:', error)
+  }
+}
 
 // Data dummy untuk testing
 const dummyGeoData = {
@@ -637,6 +756,7 @@ const changeChoroplethMetric = (metric) => {
           compact
           :suggestedQueries="pesantrenQueries"
           placeholder="Tanyakan tentang data pesantren..."
+          @result="handleNL2SQLResult"
         />
       </div>
     </div>

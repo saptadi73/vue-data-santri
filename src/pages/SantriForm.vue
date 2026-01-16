@@ -171,7 +171,8 @@
               >
                 <option value="">Pilih...</option>
                 <option value="mondok">Mondok</option>
-                <option value="pulang_pergi">Pulang Pergi</option>
+                <option value="pp">Pulang Pergi</option>
+                <option value="mukim">Mukim</option>
               </select>
             </div>
 

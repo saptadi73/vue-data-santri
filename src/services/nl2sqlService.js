@@ -113,9 +113,38 @@ export const runTests = async () => {
   }
 }
 
+/**
+ * Execute NL2SQL query and return GeoJSON for map visualization
+ * @param {string} query - Natural language query
+ * @returns {Promise<Object>} Query execution result with GeoJSON
+ */
+export const executeQueryMap = async (query) => {
+  try {
+    const response = await fetch(`${API_BASE}/nl2sql/query-map`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || `Map query failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error executing map query:', error)
+    throw error
+  }
+}
+
 export default {
   detectIntent,
   executeQuery,
   getIntents,
   runTests,
+  executeQueryMap,
 }

@@ -37,7 +37,7 @@
           </div>
 
           <!-- Filters & Add Button -->
-          <div class="flex gap-3 w-full md:w-auto">
+          <div class="flex gap-3 w-full md:w-auto flex-wrap">
             <select
               v-model="filters.provinsi"
               @change="loadSantriData"
@@ -59,6 +59,33 @@
               <option value="P">Perempuan</option>
             </select>
 
+            <select
+              v-model="pagination.per_page"
+              @change="changePerPage"
+              class="border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              title="Items per page"
+            >
+              <option value="10">10 / Halaman</option>
+              <option value="20">20 / Halaman</option>
+              <option value="50">50 / Halaman</option>
+              <option value="100">100 / Halaman</option>
+            </select>
+            <button
+              @click="handleBatchScore"
+              :disabled="santriList.length === 0 || batchScoringInProgress"
+              title="Hitung score untuk semua santri secara batch (15-30 detik)"
+              class="bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap transition-colors"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              Batch Score
+            </button>
             <router-link
               to="/santri/tambah"
               class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap"
@@ -267,7 +294,7 @@
 
         <!-- Pagination -->
         <div
-          v-if="pagination.total > 0"
+          v-if="santriList.length > 0"
           class="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6"
         >
           <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -373,12 +400,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Progress Modal for Batch Scoring -->
+    <ProgressModal
+      :is-visible="showBatchScoringModal"
+      :title="'Batch Scoring Santri'"
+      :is-processing="batchScoringInProgress"
+      :status-message="batchScoringStatus"
+      :progress-percent="batchScoringProgress"
+      :is-success="batchScoringSuccess"
+      :is-error="batchScoringError"
+      :error-message="batchScoringErrorMsg"
+      :error-details="batchScoringErrorDetails"
+      :result="batchScoringResult"
+      @close="closeBatchScoringModal"
+      @retry="handleBatchScore"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getSantriList, deleteSantri } from '@/services/santriService'
+import ProgressModal from '@/components/ProgressModal.vue'
+import { batchCalculateSantriScores, formatBatchResult } from '@/services/bulkScoringService'
 
 const santriList = ref([])
 const loading = ref(false)
@@ -400,6 +445,17 @@ const pagination = ref({
 const showDeleteModal = ref(false)
 const santriToDelete = ref(null)
 const deleting = ref(false)
+
+// Batch Scoring State
+const showBatchScoringModal = ref(false)
+const batchScoringInProgress = ref(false)
+const batchScoringSuccess = ref(false)
+const batchScoringError = ref(false)
+const batchScoringStatus = ref('Menghitung score santri...')
+const batchScoringProgress = ref(0)
+const batchScoringErrorMsg = ref('')
+const batchScoringErrorDetails = ref('')
+const batchScoringResult = ref(null)
 
 let searchTimeout = null
 
@@ -449,16 +505,46 @@ const loadSantriData = async () => {
 
     const response = await getSantriList(params)
 
+    console.log('🔍 [SantriList] API Response:', response)
+    console.log('🔍 [SantriList] Response Type:', typeof response)
+    console.log(
+      '🔍 [SantriList] Response Keys:',
+      response ? Object.keys(response) : 'null/undefined',
+    )
+
     if (response && response.success) {
       santriList.value = response.data || []
-      pagination.value = response.pagination || {
-        page: 1,
-        per_page: 20,
-        total: 0,
-        total_pages: 0,
+
+      // Handle pagination data - normalize from backend format
+      let paginationData = null
+      if (response.meta && response.meta.pagination) {
+        // Backend returns pagination inside meta
+        const backendPag = response.meta.pagination
+        paginationData = {
+          page: backendPag.current_page || 1,
+          per_page: backendPag.per_page || 20,
+          total: backendPag.total_items || 0,
+          total_pages: backendPag.total_pages || 1,
+        }
+      } else if (response.pagination) {
+        paginationData = response.pagination
+      } else {
+        // Fallback if no pagination data in response
+        paginationData = {
+          page: pagination.value.page,
+          per_page: pagination.value.per_page,
+          total: santriList.value.length,
+          total_pages: 1,
+        }
       }
+
+      pagination.value = paginationData
+
+      console.log('✅ [SantriList] Loaded data:', santriList.value.length, 'items')
+      console.log('✅ [SantriList] Pagination:', pagination.value)
     } else {
       // Handle unsuccessful response
+      console.warn('⚠️ [SantriList] Unsuccessful response:', response)
       santriList.value = []
       pagination.value = {
         page: 1,
@@ -469,7 +555,7 @@ const loadSantriData = async () => {
     }
   } catch (err) {
     error.value = err.message || 'Gagal memuat data santri. Pastikan API server berjalan.'
-    console.error('Error loading santri:', err)
+    console.error('❌ [SantriList] Error loading santri:', err)
     // Set empty data on error
     santriList.value = []
     pagination.value = {
@@ -498,6 +584,12 @@ const goToPage = (page) => {
     pagination.value.page = page
     loadSantriData()
   }
+}
+
+// Change items per page
+const changePerPage = () => {
+  pagination.value.page = 1
+  loadSantriData()
 }
 
 // Confirm delete
@@ -544,13 +636,16 @@ const loadProvinsiList = async () => {
           }
         })
 
-        // Check if there are more pages
-        if (response.pagination) {
-          hasMoreData = page < response.pagination.total_pages
-          page++
-        } else {
-          hasMoreData = false
+        // Check if there are more pages - handle both pagination formats
+        let totalPages = 1
+        if (response.meta && response.meta.pagination) {
+          totalPages = response.meta.pagination.total_pages || 1
+        } else if (response.pagination) {
+          totalPages = response.pagination.total_pages || 1
         }
+
+        hasMoreData = page < totalPages
+        page++
       } else {
         console.warn('⚠️ Response tidak valid atau tidak ada data')
         hasMoreData = false
@@ -567,6 +662,72 @@ const loadProvinsiList = async () => {
   } catch (err) {
     console.error('❌ Error loading provinsi list:', err)
   }
+}
+
+// Batch Scoring Methods
+const handleBatchScore = async () => {
+  // Reset state
+  showBatchScoringModal.value = true
+  batchScoringInProgress.value = true
+  batchScoringSuccess.value = false
+  batchScoringError.value = false
+  batchScoringStatus.value = 'Menghitung score santri...'
+  batchScoringProgress.value = 0
+  batchScoringErrorMsg.value = ''
+  batchScoringErrorDetails.value = ''
+  batchScoringResult.value = null
+
+  try {
+    // Simulate progress updates (since API doesn't provide real-time progress)
+    const progressInterval = setInterval(() => {
+      if (batchScoringProgress.value < 90) {
+        batchScoringProgress.value += Math.random() * 20
+      }
+    }, 500)
+
+    console.log('🟡 Starting batch scoring for all santri...')
+    const result = await batchCalculateSantriScores()
+
+    clearInterval(progressInterval)
+    batchScoringProgress.value = 100
+
+    // Format result untuk display
+    const formattedResult = formatBatchResult(result)
+
+    console.log('🟢 Batch scoring success:', formattedResult)
+
+    batchScoringResult.value = formattedResult
+    batchScoringSuccess.value = true
+    batchScoringInProgress.value = false
+
+    // Auto reload data setelah 2 detik
+    setTimeout(() => {
+      loadSantriData()
+    }, 2000)
+  } catch (err) {
+    console.error('🔴 Batch scoring error:', err)
+
+    batchScoringError.value = true
+    batchScoringInProgress.value = false
+    batchScoringErrorMsg.value =
+      err.message || 'Gagal menghitung score. Pastikan server API berjalan dengan baik.'
+    batchScoringErrorDetails.value = err.stack || ''
+  }
+}
+
+const closeBatchScoringModal = () => {
+  showBatchScoringModal.value = false
+  // Reset state setelah modal ditutup
+  setTimeout(() => {
+    batchScoringInProgress.value = false
+    batchScoringSuccess.value = false
+    batchScoringError.value = false
+    batchScoringStatus.value = 'Menghitung score santri...'
+    batchScoringProgress.value = 0
+    batchScoringErrorMsg.value = ''
+    batchScoringErrorDetails.value = ''
+    batchScoringResult.value = null
+  }, 300)
 }
 
 onMounted(() => {
