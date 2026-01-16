@@ -74,6 +74,11 @@ const router = createRouter({
       component: () => import('@/pages/BackendDebug.vue'),
     },
     {
+      path: '/ai-vision',
+      name: 'ai-vision',
+      component: () => import('@/pages/AIVisionPage.vue'),
+    },
+    {
       path: '/santri',
       name: 'santri-list',
       component: () => import('@/pages/SantriList.vue'),

@@ -257,6 +257,11 @@ onBeforeUnmount(() => {
               >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/ai-vision"
+                >🤖 AI Vision Analytics</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
                 to="/sebaran-santri"
                 >Sebaran Santri</RouterLink
               >
@@ -456,6 +461,12 @@ onBeforeUnmount(() => {
                 to="/peta-pesantren"
                 @click="closeAll"
                 >Peta Pesantren</RouterLink
+              >
+              <RouterLink
+                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/ai-vision"
+                @click="closeAll"
+                >🤖 AI Vision Analytics</RouterLink
               >
               <a
                 class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"

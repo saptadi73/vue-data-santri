@@ -123,17 +123,17 @@ const chartData = computed(() => {
   const rows = formattedResult.value.data
   // Filter out ID, UUID, dan coordinate columns
   const allKeys = Object.keys(rows[0])
-  
+
   // Check if result has coordinate data (untuk map visualization)
   const hasCoordinates =
     allKeys.some((k) => k.toLowerCase().includes('latitude') || k.toLowerCase().includes('lat')) &&
     allKeys.some((k) => k.toLowerCase().includes('longitude') || k.toLowerCase().includes('lng'))
-  
+
   // Jika ada koordinat, jangan tampilkan chart (karena akan ditampilkan di map)
   if (hasCoordinates) {
     return null
   }
-  
+
   const keys = allKeys.filter(
     (k) =>
       !k.toLowerCase().includes('id') &&
