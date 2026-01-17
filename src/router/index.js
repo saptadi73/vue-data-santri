@@ -79,6 +79,11 @@ const router = createRouter({
       component: () => import('@/pages/AIVisionPage.vue'),
     },
     {
+      path: '/gis-ai-teknologi',
+      name: 'gis-ai-teknologi',
+      component: () => import('@/pages/GISAITechnology.vue'),
+    },
+    {
       path: '/santri',
       name: 'santri-list',
       component: () => import('@/pages/SantriList.vue'),

@@ -26,54 +26,31 @@
   }
 }
 
-@utility fade-in-up {
-  animation: fade-in-up 600ms ease-out both;
+@layer utilities {
+  .fade-in-up {
+    animation: fade-in-up 600ms ease-out both;
+  }
+
+  .fade-in {
+    animation: fade-in-up 500ms ease-out both;
+  }
+
+  .hover-zoom {
+    transition:
+      transform 300ms ease,
+      box-shadow 300ms ease;
+  }
+
+  .hover-zoom:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.35);
+  }
 }
 
-@utility fade-in {
-  animation: fade-in-up 500ms ease-out both;
-}
-
-@utility glass-card {
-  background: color-mix(in oklab, white 75%, transparent);
-  border: 1px solid var(--color-slate-200);
-  backdrop-filter: blur(10px);
-}
-
-@utility hover-zoom {
-  transition:
-    transform 300ms ease,
-    box-shadow 300ms ease;
-}
-
-.hover-zoom:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.35);
-}
-
-@theme {
-  --font-sans:
-    'Poppins', 'Roboto', 'Montserrat', 'Oswald', 'EB Garamond', 'Libre Baskerville', ui-sans-serif,
-    system-ui, sans-serif;
-  --font-serif: 'EB Garamond', 'Libre Baskerville', ui-serif, serif;
-  --font-handwriting: 'Great Vibes', 'Handlee', cursive;
-  --font-roboto: 'Roboto', sans-serif;
-  --font-monserat: 'Montserrat', sans-serif;
-  --font-Oswald: 'Oswald', sans-serif;
-  --font-Garamond: 'EB Garamond', serif;
-}
-
-@utility icon {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
+@layer components {
+  .glass-card {
+    background: color-mix(in oklab, white 75%, transparent);
+    border: 1px solid var(--color-slate-200);
+    backdrop-filter: blur(10px);
+  }
 }

@@ -20,6 +20,8 @@ let choropletheLayer = null
 let clusterGroupRef = null
 let nl2sqlLayerRef = null
 let boundaryLayersRef = ref(null)
+let choroplethDataRef = null // Reference to choropleth aggregated data
+let boundaryDataRef = null // Reference to boundary GeoJSON
 const isLoading = ref(true)
 const error = ref(null)
 const theme = ref('light')
@@ -59,7 +61,6 @@ const handleNL2SQLResult = async (data) => {
       (result[0].longitude || result[0].lng)
 
     if (!hasCoordinates) {
-      console.log('Query result tidak memiliki koordinat, skip map visualization')
       return
     }
 
@@ -149,8 +150,6 @@ const handleNL2SQLResult = async (data) => {
       const bounds = L.geoJSON(geojson).getBounds()
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 })
     }
-
-    console.log(`✅ Menampilkan ${features.length} hasil NL2SQL di peta`)
   } catch (error) {
     console.error('Error displaying NL2SQL results:', error)
   }
@@ -248,8 +247,19 @@ onMounted(async () => {
   try {
     theme.value = resolveTheme()
 
-    // Inisialisasi map
-    map = L.map('map').setView([-2.5, 118], 5)
+    // Suppress Canvas2D willReadFrequently warning - we already set it in renderer
+    const originalWarn = console.warn
+    const warnFilter = new RegExp('Canvas2D.*willReadFrequently')
+    console.warn = function (...args) {
+      if (!warnFilter.test(String(args[0]))) {
+        originalWarn.apply(console, args)
+      }
+    }
+
+    // Inisialisasi map dengan renderer yang optimal
+    map = L.map('map', {
+      renderer: L.canvas({ willReadFrequently: true }),
+    }).setView([-2.5, 118], 5)
     applyBaseLayer(theme.value)
 
     // Create custom pane for pesantren markers with higher z-index
@@ -275,11 +285,6 @@ onMounted(async () => {
 
         // Backend membungkus GeoJSON dalam object data
         geo = geoData.data || geoData
-
-        // Debug: log first feature to see structure
-        if (geo.features && geo.features.length > 0) {
-          console.log('Sample pesantren feature properties:', geo.features[0].properties)
-        }
       } catch (fetchError) {
         console.error('Error fetching pesantren points:', fetchError)
         throw new Error(`Backend API tidak dapat diakses. Pastikan server berjalan di ${API_BASE}`)
@@ -303,7 +308,6 @@ onMounted(async () => {
         throw new Error(`Gagal mengambil data heatmap dari ${API_BASE}`)
       }
     }
-
     // Function to get marker color based on akreditasi level
     const getMarkerColor = (akreditasi) => {
       const level = akreditasi?.toLowerCase().trim() || ''
@@ -411,31 +415,114 @@ onMounted(async () => {
       }
     }
 
+    // ===== NORMALISASI REGION NAMES =====
+    const normalizeRegionName = (name) => {
+      if (!name) return ''
+      return String(name)
+        .toLowerCase()
+        .replace(/^kota\s+/g, '')
+        .replace(/^kabupaten\s+/g, '')
+        .replace(/^kab\.?\s*/g, '')
+        .replace(/^kotamadya\s+/g, '')
+        .replace(/^administrasi\s+/g, '')
+        .replace(/^dki\s+/g, '')
+        .replace(/\./g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    }
+
+    // ===== MAPPING PESANTREN NAMES TO BOUNDARY NAMES =====
+    const pesantrenToBoundaryMap = {
+      solo: 'surakarta',
+      bekasi: ['kota bekasi', 'kabupaten bekasi'],
+      surabaya: 'kota surabaya',
+      sleman: 'kabupaten sleman',
+      serang: ['kota serang', 'kabupaten serang'],
+      jember: 'kabupaten jember',
+      bogor: ['kota bogor', 'kabupaten bogor'],
+      bandung: ['kota bandung', 'kabupaten bandung'],
+      malang: ['kota malang', 'kabupaten malang'],
+      tangerang: ['kota tangerang', 'kabupaten tangerang'],
+      semarang: 'kota semarang',
+      magelang: ['kota magelang', 'kabupaten magelang'],
+      bantul: 'kabupaten bantul',
+    }
+
     // ===== CHOROPLETH (Aggregate by Kabupaten) =====
     try {
       const boundaryResponse = await fetch('/data/geo/indonesia-kabupaten.geojson')
       if (boundaryResponse.ok) {
         const boundaryData = await boundaryResponse.json()
+        boundaryDataRef = boundaryData // Save reference untuk changeChoroplethMetric
 
         // Aggregate pesantren data by kabupaten
         const aggregateByKabupaten = (geoData) => {
           const aggregate = {}
-          geoData.features?.forEach((feature) => {
-            const kabupaten = feature.properties?.kabupaten || 'Unknown'
-            if (!aggregate[kabupaten]) {
-              aggregate[kabupaten] = { count: 0, total_score: 0, features: [] }
+          geoData.features?.forEach((feature, index) => {
+            const rawKab =
+              feature.properties?.kabupaten || feature.properties?.kabupaten_domisili || 'Unknown'
+            const key = normalizeRegionName(rawKab)
+
+            if (!aggregate[key]) {
+              aggregate[key] = { count: 0, total_score: 0, features: [] }
             }
-            aggregate[kabupaten].count += 1
-            aggregate[kabupaten].total_score += feature.properties?.score || 0
-            aggregate[kabupaten].features.push(feature)
+            aggregate[key].count += 1
+
+            // Try multiple property names for score (prioritize skor)
+            const scoreValue =
+              feature.properties?.skor ||
+              feature.properties?.score ||
+              feature.properties?.total_score ||
+              0
+
+            aggregate[key].total_score += scoreValue
+            aggregate[key].features.push(feature)
           })
           return aggregate
         }
 
         const pesantrenAggregated = aggregateByKabupaten(geo)
+        choroplethDataRef = pesantrenAggregated // Save reference untuk changeChoroplethMetric
+
+        // Helper function untuk lookup pesantren aggregated data dari boundary name
+        const lookupPesantrenData = (boundaryRawName) => {
+          const normalized = normalizeRegionName(boundaryRawName).toLowerCase().trim()
+
+          // Direct match dari normalized boundary name
+          if (pesantrenAggregated[normalized]) {
+            return pesantrenAggregated[normalized]
+          }
+
+          // Try all pesantren keys dan lihat apakah cocok dengan nama ini
+          for (const [pesantrenKey, pesantrenData] of Object.entries(pesantrenAggregated)) {
+            // Check jika boundary name contains pesantren key atau sebaliknya
+            if (normalized.includes(pesantrenKey) || pesantrenKey.includes(normalized)) {
+              return pesantrenData
+            }
+
+            // Check jika pesantren key ada di mapping dan cocok dengan boundary name
+            if (pesantrenToBoundaryMap[pesantrenKey]) {
+              const mappedNames = Array.isArray(pesantrenToBoundaryMap[pesantrenKey])
+                ? pesantrenToBoundaryMap[pesantrenKey]
+                : [pesantrenToBoundaryMap[pesantrenKey]]
+
+              for (const mappedName of mappedNames) {
+                const normalizedMapped = normalizeRegionName(mappedName).toLowerCase().trim()
+                if (normalizedMapped === normalized) {
+                  return pesantrenData
+                }
+              }
+            }
+          }
+
+          return null // No match
+        }
 
         // Determine color based on metric
         const getColor = (value, max) => {
+          // No data atau value 0 = putih
+          if (!isFinite(value) || value <= 0) return '#ffffff'
+
           const ratio = max > 0 ? value / max : 0
           if (ratio > 0.8) return '#dc2626' // Red
           if (ratio > 0.6) return '#ea580c' // Orange
@@ -452,8 +539,12 @@ onMounted(async () => {
 
         const choroplethLayer = L.geoJSON(boundaryData, {
           style: (feature) => {
-            const kabupaten = feature.properties?.nama || feature.properties?.NAME || 'Unknown'
-            const data = pesantrenAggregated[kabupaten]
+            const rawName =
+              feature.properties?.nama ||
+              feature.properties?.NAME ||
+              feature.properties?.NAME_2 ||
+              'Unknown'
+            const data = lookupPesantrenData(rawName)
             const value =
               data && choroplethMetric.value === 'count'
                 ? data.count
@@ -470,15 +561,19 @@ onMounted(async () => {
             }
           },
           onEachFeature: (feature, layer) => {
-            const kabupaten = feature.properties?.nama || feature.properties?.NAME || 'Unknown'
-            const data = pesantrenAggregated[kabupaten]
+            const rawName =
+              feature.properties?.nama ||
+              feature.properties?.NAME ||
+              feature.properties?.NAME_2 ||
+              'Unknown'
+            const data = lookupPesantrenData(rawName)
 
             const tooltip =
               data && choroplethMetric.value === 'count'
-                ? `<strong>${kabupaten}</strong><br>Pesantren: ${data.count}`
+                ? `<strong>${rawName}</strong><br>Pesantren: ${data.count}`
                 : data
-                  ? `<strong>${kabupaten}</strong><br>Rata-rata Skor: ${(data.total_score / data.count).toFixed(2)}`
-                  : `<strong>${kabupaten}</strong><br>Data tidak tersedia`
+                  ? `<strong>${rawName}</strong><br>Rata-rata Skor: ${(data.total_score / data.count).toFixed(2)}`
+                  : `<strong>${rawName}</strong><br>Data tidak tersedia`
 
             layer.bindPopup(tooltip)
             layer.on('mouseover', function () {
@@ -494,6 +589,7 @@ onMounted(async () => {
       }
     } catch (err) {
       console.warn('Choropleth data tidak tersedia:', err)
+      console.error('Choropleth error details:', err.stack)
     }
 
     // Zoom ke area Jawa
@@ -630,10 +726,157 @@ const toggleChoropleth = () => {
 
 const changeChoroplethMetric = (metric) => {
   choroplethMetric.value = metric
-  // Reload choropleth dengan metric baru
+
+  // Recreate choropleth layer dengan metric baru jika data tersedia
+  if (!choroplethDataRef || !boundaryDataRef || !map) return
+
+  // Remove old layer jika ada
   if (choropletheLayer && map.hasLayer(choropletheLayer)) {
     map.removeLayer(choropletheLayer)
-    toggleChoropleth()
+  }
+
+  try {
+    // Helper function untuk normalize region names
+    const normalizeRegionName = (name) => {
+      if (!name) return ''
+      return String(name)
+        .toLowerCase()
+        .replace(/^kota\s+/g, '')
+        .replace(/^kabupaten\s+/g, '')
+        .replace(/^kab\.?\s*/g, '')
+        .replace(/^kotamadya\s+/g, '')
+        .replace(/^administrasi\s+/g, '')
+        .replace(/^dki\s+/g, '')
+        .replace(/\./g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    }
+
+    // Mapping pesantren ke boundary names
+    const pesantrenToBoundaryMap = {
+      solo: 'surakarta',
+      bekasi: ['kota bekasi', 'kabupaten bekasi'],
+      surabaya: 'kota surabaya',
+      sleman: 'kabupaten sleman',
+      serang: ['kota serang', 'kabupaten serang'],
+      jember: 'kabupaten jember',
+      bogor: ['kota bogor', 'kabupaten bogor'],
+      bandung: ['kota bandung', 'kabupaten bandung'],
+      malang: ['kota malang', 'kabupaten malang'],
+      tangerang: ['kota tangerang', 'kabupaten tangerang'],
+      semarang: 'kota semarang',
+      magelang: ['kota magelang', 'kabupaten magelang'],
+      bantul: 'kabupaten bantul',
+    }
+
+    // Helper function untuk lookup pesantren aggregated data dari boundary name
+    const lookupPesantrenData = (boundaryRawName) => {
+      const normalized = normalizeRegionName(boundaryRawName).toLowerCase().trim()
+
+      if (choroplethDataRef[normalized]) {
+        return choroplethDataRef[normalized]
+      }
+
+      for (const [pesantrenKey, pesantrenData] of Object.entries(choroplethDataRef)) {
+        if (normalized.includes(pesantrenKey) || pesantrenKey.includes(normalized)) {
+          return pesantrenData
+        }
+
+        if (pesantrenToBoundaryMap[pesantrenKey]) {
+          const mappedNames = Array.isArray(pesantrenToBoundaryMap[pesantrenKey])
+            ? pesantrenToBoundaryMap[pesantrenKey]
+            : [pesantrenToBoundaryMap[pesantrenKey]]
+
+          for (const mappedName of mappedNames) {
+            const normalizedMapped = normalizeRegionName(mappedName).toLowerCase().trim()
+            if (normalizedMapped === normalized) {
+              return pesantrenData
+            }
+          }
+        }
+      }
+
+      return null
+    }
+
+    // Determine color based on metric
+    const getColor = (value, max) => {
+      if (!isFinite(value) || value <= 0) return '#ffffff'
+      const ratio = max > 0 ? value / max : 0
+      if (ratio > 0.8) return '#dc2626'
+      if (ratio > 0.6) return '#ea580c'
+      if (ratio > 0.4) return '#f59e0b'
+      if (ratio > 0.2) return '#84cc16'
+      return '#22c55e'
+    }
+
+    // Calculate max value untuk metric yang baru
+    const rawValues = Object.values(choroplethDataRef).map((v) => {
+      const val = choroplethMetric.value === 'count' ? v.count : v.total_score / v.count
+      return val
+    })
+
+    const values = rawValues.filter((v) => isFinite(v) && v > 0)
+
+    const maxValue = values.length > 0 ? Math.max(...values) : 0
+
+    // Create new choropleth layer dengan metric baru
+    const choroplethLayer = L.geoJSON(boundaryDataRef, {
+      style: (feature) => {
+        const rawName =
+          feature.properties?.nama ||
+          feature.properties?.NAME ||
+          feature.properties?.NAME_2 ||
+          'Unknown'
+        const data = lookupPesantrenData(rawName)
+        const value =
+          data && choroplethMetric.value === 'count'
+            ? data.count
+            : data
+              ? data.total_score / data.count
+              : 0
+
+        const color = getColor(value, maxValue)
+
+        return {
+          fillColor: color,
+          weight: 2,
+          opacity: 0.7,
+          color: '#333',
+          fillOpacity: 0.6,
+        }
+      },
+      onEachFeature: (feature, layer) => {
+        const rawName =
+          feature.properties?.nama ||
+          feature.properties?.NAME ||
+          feature.properties?.NAME_2 ||
+          'Unknown'
+        const data = lookupPesantrenData(rawName)
+
+        const tooltip =
+          data && choroplethMetric.value === 'count'
+            ? `<strong>${rawName}</strong><br>Pesantren: ${data.count}`
+            : data
+              ? `<strong>${rawName}</strong><br>Rata-rata Skor: ${(data.total_score / data.count).toFixed(2)}`
+              : `<strong>${rawName}</strong><br>Data tidak tersedia`
+
+        layer.bindPopup(tooltip)
+        layer.on('mouseover', function () {
+          this.setStyle({ weight: 3, opacity: 1 })
+        })
+        layer.on('mouseout', function () {
+          this.setStyle({ weight: 2, opacity: 0.7 })
+        })
+      },
+    })
+
+    choropletheLayer = choroplethLayer
+    if (showChoropleth.value) {
+      choropletheLayer.addTo(map)
+    }
+  } catch (err) {
+    console.error('Error updating choropleth metric:', err)
   }
 }
 </script>

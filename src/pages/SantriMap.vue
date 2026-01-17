@@ -21,6 +21,10 @@ let choropletheLayer = null
 let clusterGroupRef = null
 let nl2sqlLayerRef = null
 let boundaryLayersRef = ref(null)
+// Refs for rebuilding choropleth on metric change
+let santriGeoRef = null
+let kabupatenBoundaryRef = null
+let choroplethThresholdsRef = null
 const isLoading = ref(true)
 const error = ref(null)
 const theme = ref('light')
@@ -43,35 +47,65 @@ const santriQueries = [
 const dummyGeoData = {
   type: 'FeatureCollection',
   features: [
+    // Jakarta
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [106.8456, -6.2088] },
-      properties: { name: 'Ahmad Santoso', ekonomi: 'Menengah', score: 75 },
+      properties: { name: 'Ahmad Santoso', ekonomi: 'Miskin', score: 75, kabupaten: 'Jakarta' },
     },
+    // Bandung (Jawa Barat)
     {
       type: 'Feature',
-      geometry: { type: 'Point', coordinates: [110.3695, -7.7956] },
-      properties: { name: 'Fatimah Zahra', ekonomi: 'Rendah', score: 85 },
-    },
-    {
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [112.7521, -7.2575] },
-      properties: { name: 'Muhammad Ridwan', ekonomi: 'Rendah', score: 90 },
+      geometry: { type: 'Point', coordinates: [107.6191, -6.9175] },
+      properties: { name: 'Siti Aisyah', ekonomi: 'Menengah', score: 70, kabupaten: 'Bandung' },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [107.6191, -6.9175] },
-      properties: { name: 'Siti Aisyah', ekonomi: 'Menengah', score: 70 },
+      properties: { name: 'Bambang', ekonomi: 'Menengah', score: 65, kabupaten: 'Bandung' },
     },
     {
       type: 'Feature',
-      geometry: { type: 'Point', coordinates: [113.9213, -8.1545] },
-      properties: { name: 'Abdullah Hakim', ekonomi: 'Rendah', score: 88 },
+      geometry: { type: 'Point', coordinates: [107.6191, -6.9175] },
+      properties: { name: 'Indah', ekonomi: 'Miskin', score: 80, kabupaten: 'Bandung' },
     },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [107.6191, -6.9175] },
+      properties: { name: 'Rudi', ekonomi: 'Rendah', score: 85, kabupaten: 'Bandung' },
+    },
+    // Surabaya (Jawa Timur)
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [110.3695, -7.7956] },
+      properties: { name: 'Fatimah Zahra', ekonomi: 'Rendah', score: 85, kabupaten: 'Surabaya' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [110.3695, -7.7956] },
+      properties: { name: 'Ahmad Wijaya', ekonomi: 'Miskin', score: 88, kabupaten: 'Surabaya' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [110.3695, -7.7956] },
+      properties: { name: 'Lina', ekonomi: 'Rendah', score: 95, kabupaten: 'Surabaya' },
+    },
+    // Sidoarjo (Jawa Timur)
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [112.7521, -7.2575] },
+      properties: { name: 'Muhammad Ridwan', ekonomi: 'Rendah', score: 90, kabupaten: 'Sidoarjo' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [112.7521, -7.2575] },
+      properties: { name: 'Rina Santoso', ekonomi: 'Menengah', score: 78, kabupaten: 'Sidoarjo' },
+    },
+    // Semarang (Jawa Tengah)
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [109.1402, -6.8748] },
-      properties: { name: 'Khadijah Nurma', ekonomi: 'Rendah', score: 92 },
+      properties: { name: 'Khadijah Nurma', ekonomi: 'Rendah', score: 92, kabupaten: 'Semarang' },
     },
   ],
 }
@@ -91,8 +125,19 @@ onMounted(async () => {
   try {
     theme.value = resolveTheme()
 
-    // Inisialisasi map
-    map = L.map('map').setView([-2.5, 118], 5)
+    // Suppress Canvas2D willReadFrequently warning - we already set it in renderer
+    const originalWarn = console.warn
+    const warnFilter = new RegExp('Canvas2D.*willReadFrequently')
+    console.warn = function (...args) {
+      if (!warnFilter.test(String(args[0]))) {
+        originalWarn.apply(console, args)
+      }
+    }
+
+    // Inisialisasi map dengan renderer yang optimal
+    map = L.map('map', {
+      renderer: L.canvas({ willReadFrequently: true }),
+    }).setView([-2.5, 118], 5)
     applyBaseLayer(theme.value)
 
     // Create custom pane for santri markers with higher z-index
@@ -109,6 +154,7 @@ onMounted(async () => {
       // Gunakan data dummy
       geo = dummyGeoData
       heat = dummyHeatData
+      santriGeoRef = geo // ✅ Pastikan santriGeoRef diset untuk dummy data
     } else {
       // ===== FETCH DATA DARI API =====
       try {
@@ -118,16 +164,13 @@ onMounted(async () => {
 
         // Backend membungkus GeoJSON dalam object data
         geo = geoData.data || geoData
-
-        // NOTE: Backend API /gis/santri-points harus mengirim field ekonomi dan score
-        // Lihat BACKEND_FIX_NEEDED.md untuk detail
-        console.log('✅ Loaded santri GeoJSON features:', geo.features?.length || 0)
-        if (geo.features && geo.features.length > 0) {
-          console.log('Sample properties:', geo.features[0].properties)
-        }
+        santriGeoRef = geo
       } catch (fetchError) {
-        console.error('Error fetching santri points:', fetchError)
-        throw new Error(`Backend API tidak dapat diakses. Pastikan server berjalan di ${API_BASE}`)
+        console.error('❌ Error fetching santri points:', fetchError?.message || fetchError)
+        console.warn('⚠️ Continuing with empty santri data to prevent full error...')
+        geo = { type: 'FeatureCollection', features: [] }
+        santriGeoRef = geo
+        // Jangan throw - lanjutkan dengan data kosong supaya choropleth tetap render
       }
 
       try {
@@ -142,10 +185,11 @@ onMounted(async () => {
           lng: f.lng,
           weight: f.weight || f.skor || f.score || 0,
         }))
-        console.log('✅ Loaded heatmap data points:', heat.length)
       } catch (fetchError) {
-        console.error('Error fetching heatmap:', fetchError)
-        throw new Error(`Gagal mengambil data heatmap dari ${API_BASE}`)
+        console.error('❌ Error fetching heatmap:', fetchError?.message || fetchError)
+        console.warn('⚠️ Continuing with empty heatmap data...')
+        heat = []
+        // Jangan throw - lanjutkan tanpa heatmap
       }
     }
 
@@ -259,87 +303,211 @@ onMounted(async () => {
 
     // ===== CHOROPLETH (Aggregate by Kabupaten) =====
     try {
+      // Fetch boundary GeoJSON from public folder
       const boundaryResponse = await fetch('/data/geo/indonesia-kabupaten.geojson')
-      if (boundaryResponse.ok) {
-        const boundaryData = await boundaryResponse.json()
+      if (!boundaryResponse.ok) throw new Error(`Boundary fetch failed: ${boundaryResponse.status}`)
+      const boundaryData = await boundaryResponse.json()
+      kabupatenBoundaryRef = boundaryData
 
-        // Aggregate santri data by kabupaten
-        const aggregateByKabupaten = (geoData) => {
-          const aggregate = {}
-          geoData.features?.forEach((feature) => {
-            const kabupaten = feature.properties?.kabupaten || 'Unknown'
-            if (!aggregate[kabupaten]) {
-              aggregate[kabupaten] = { count: 0, total_score: 0, features: [] }
-            }
-            aggregate[kabupaten].count += 1
-            aggregate[kabupaten].total_score += feature.properties?.score || 0
-            aggregate[kabupaten].features.push(feature)
-          })
-          return aggregate
-        }
-
-        const santriAggregated = aggregateByKabupaten(geo)
-
-        // Determine color based on metric
-        const getColor = (value, max) => {
-          const ratio = max > 0 ? value / max : 0
-          if (ratio > 0.8) return '#ef4444' // Red
-          if (ratio > 0.6) return '#f97316' // Orange
-          if (ratio > 0.4) return '#eab308' // Yellow
-          if (ratio > 0.2) return '#84cc16' // Lime
-          return '#22c55e' // Green
-        }
-
-        // Calculate max value for normalization
-        const values = Object.values(santriAggregated).map((v) =>
-          choroplethMetric.value === 'count' ? v.count : v.total_score / v.count,
+      const normalizeRegionName = (name) => {
+        if (!name || typeof name !== 'string') return 'UNKNOWN'
+        return (
+          name
+            .toLowerCase()
+            // Remove prefixes
+            .replace(/^kota\s+/g, '')
+            .replace(/^kabupaten\s+/g, '')
+            .replace(/^kab\.?\s*/g, '')
+            .replace(/^kotamadya\s+/g, '')
+            .replace(/^administrasi\s+/g, '')
+            .replace(/^dki\s+/g, '')
+            // Remove suffix variations
+            .replace(/\s+selatan$/g, ' selatan')
+            .replace(/\s+utara$/g, ' utara')
+            .replace(/\s+timur$/g, ' timur')
+            .replace(/\s+barat$/g, ' barat')
+            .replace(/\s+tengah$/g, ' tengah')
+            // General cleanup
+            .replace(/\./g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
         )
-        const maxValue = Math.max(...values)
-
-        const choroplethLayer = L.geoJSON(boundaryData, {
-          style: (feature) => {
-            const kabupaten = feature.properties?.nama || feature.properties?.NAME || 'Unknown'
-            const data = santriAggregated[kabupaten]
-            const value =
-              data && choroplethMetric.value === 'count'
-                ? data.count
-                : data
-                  ? data.total_score / data.count
-                  : 0
-
-            return {
-              fillColor: getColor(value, maxValue),
-              weight: 2,
-              opacity: 0.7,
-              color: '#333',
-              fillOpacity: 0.6,
-            }
-          },
-          onEachFeature: (feature, layer) => {
-            const kabupaten = feature.properties?.nama || feature.properties?.NAME || 'Unknown'
-            const data = santriAggregated[kabupaten]
-
-            const tooltip =
-              data && choroplethMetric.value === 'count'
-                ? `<strong>${kabupaten}</strong><br>Santri: ${data.count}`
-                : data
-                  ? `<strong>${kabupaten}</strong><br>Rata-rata Skor: ${(data.total_score / data.count).toFixed(2)}`
-                  : `<strong>${kabupaten}</strong><br>Data tidak tersedia`
-
-            layer.bindPopup(tooltip)
-            layer.on('mouseover', function () {
-              this.setStyle({ weight: 3, opacity: 1 })
-            })
-            layer.on('mouseout', function () {
-              this.setStyle({ weight: 2, opacity: 0.7 })
-            })
-          },
-        })
-
-        choropletheLayer = choroplethLayer
       }
+
+      // ===== MAPPING SANTRI NAMES TO BOUNDARY NAMES =====
+      // Karena santri data punya nama singkat (bandung, bekasi) tapi boundary punya nama lengkap (Kota Bandung, Kabupaten Bekasi)
+      const sanitriToBoundaryMap = {
+        solo: 'surakarta',
+        bekasi: ['kota bekasi', 'kabupaten bekasi'],
+        surabaya: 'kota surabaya',
+        sleman: 'kabupaten sleman',
+        serang: ['kota serang', 'kabupaten serang'],
+        jember: 'kabupaten jember',
+        bogor: ['kota bogor', 'kabupaten bogor'],
+        bandung: ['kota bandung', 'kabupaten bandung'],
+        malang: ['kota malang', 'kabupaten malang'],
+        tangerang: ['kota tangerang', 'kabupaten tangerang'],
+        semarang: 'kota semarang',
+        magelang: ['kota magelang', 'kabupaten magelang'],
+        bantul: 'kabupaten bantul',
+      }
+
+      // Aggregate santri data by normalized kabupaten name
+      const aggregateByKabupaten = (geoData) => {
+        const aggregate = {}
+        geoData.features?.forEach((feature) => {
+          const p = feature.properties || {}
+          const rawKab =
+            p.kabupaten ||
+            p.kabupaten_domisili ||
+            p.kab ||
+            p.regency ||
+            p.kabupaten_name ||
+            'Unknown'
+
+          // Normalize kabupaten name
+          const key = normalizeRegionName(rawKab)
+
+          if (!aggregate[key]) {
+            aggregate[key] = { count: 0, total_score: 0 }
+          }
+          aggregate[key].count += 1
+          const scoreVal = Number(p.score || p.skor || p.total_score || 0)
+          aggregate[key].total_score += isFinite(scoreVal) ? scoreVal : 0
+        })
+        return aggregate
+      }
+
+      const santriAggregated = aggregateByKabupaten(santriGeoRef || geo)
+
+      // Helper function untuk lookup santri aggregated data dari boundary name
+      // Karena boundary name berbeda dengan santri name, perlu special matching logic
+      const lookupSantriData = (boundaryRawName) => {
+        const normalized = normalizeRegionName(boundaryRawName).toLowerCase().trim()
+
+        // Direct match dari normalized boundary name
+        if (santriAggregated[normalized]) {
+          return santriAggregated[normalized]
+        }
+
+        // Try all santri keys dan lihat apakah cocok dengan nama ini
+        for (const [santriKey, santriData] of Object.entries(santriAggregated)) {
+          // Check jika boundary name contains santri key atau sebaliknya
+          if (normalized.includes(santriKey) || santriKey.includes(normalized)) {
+            return santriData
+          }
+
+          // Check jika santri key ada di mapping dan cocok dengan boundary name
+          if (sanitriToBoundaryMap[santriKey]) {
+            const mappedNames = Array.isArray(sanitriToBoundaryMap[santriKey])
+              ? sanitriToBoundaryMap[santriKey]
+              : [sanitriToBoundaryMap[santriKey]]
+
+            for (const mappedName of mappedNames) {
+              const normalizedMapped = normalizeRegionName(mappedName).toLowerCase().trim()
+              if (normalizedMapped === normalized) {
+                return santriData
+              }
+            }
+          }
+        }
+
+        return null // No match
+      }
+
+      // Debug: log aggregated data
+      console.log('🔍 Santri Aggregated:', santriAggregated)
+      console.log('🔍 Keys dari Santri:', Object.keys(santriAggregated))
+      if (geo.features && geo.features.length > 0) {
+        console.log('🔍 Sample santri properties:', geo.features[0].properties)
+        console.log('🔍 Total santri features:', geo.features.length)
+      }
+
+      // Build quantile thresholds for more balanced color bins
+      const buildQuantileThresholds = (arr, quantiles = [0.2, 0.4, 0.6, 0.8]) => {
+        if (!arr || arr.length === 0) return []
+        const sorted = [...arr].sort((a, b) => a - b)
+        return quantiles.map((q) => {
+          const idx = Math.floor(q * (sorted.length - 1))
+          return sorted[idx]
+        })
+      }
+
+      const metricIsCount = choroplethMetric.value === 'count'
+      const valuesForThresholds = Object.values(santriAggregated)
+        .map((v) => (metricIsCount ? v.count : v.total_score / (v.count || 1)))
+        .filter((v) => isFinite(v) && v > 0)
+
+      const thresholds = buildQuantileThresholds(valuesForThresholds)
+      choroplethThresholdsRef = thresholds
+      const colors = ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444']
+
+      const pickColor = (value) => {
+        if (!isFinite(value) || value <= 0) return '#d1d5db' // no data / zero
+        if (thresholds.length === 0) return colors[0]
+        if (value <= thresholds[0]) return colors[0]
+        if (value <= thresholds[1]) return colors[1]
+        if (value <= thresholds[2]) return colors[2]
+        if (value <= thresholds[3]) return colors[3]
+        return colors[4]
+      }
+
+      const choroplethLayer = L.geoJSON(kabupatenBoundaryRef || boundaryData, {
+        style: (feature) => {
+          const rawName =
+            feature.properties?.nama ||
+            feature.properties?.NAME ||
+            feature.properties?.NAME_2 ||
+            'Unknown'
+
+          // Gunakan helper function untuk lookup, bukan direct normalize
+          const data = lookupSantriData(rawName)
+          const value = data
+            ? metricIsCount
+              ? data.count
+              : data.total_score / (data.count || 1)
+            : NaN
+          const color = pickColor(value)
+          return {
+            fillColor: color,
+            weight: 2,
+            opacity: 0.7,
+            color: '#333',
+            fillOpacity: 0.6,
+          }
+        },
+        onEachFeature: (feature, layer) => {
+          const rawName =
+            feature.properties?.nama ||
+            feature.properties?.NAME ||
+            feature.properties?.NAME_2 ||
+            'Unknown'
+
+          // Gunakan helper function untuk lookup
+          const data = lookupSantriData(rawName)
+          const tooltip = data
+            ? metricIsCount
+              ? `<strong>${rawName}</strong><br>Santri: ${data.count}`
+              : `<strong>${rawName}</strong><br>Rata-rata Skor: ${(data.total_score / (data.count || 1)).toFixed(2)}`
+            : `<strong>${rawName}</strong><br>Data tidak tersedia`
+
+          layer.bindPopup(tooltip)
+          layer.on('mouseover', function () {
+            this.setStyle({ weight: 3, opacity: 1 })
+          })
+          layer.on('mouseout', function () {
+            this.setStyle({ weight: 2, opacity: 0.7 })
+          })
+        },
+      })
+
+      choropletheLayer = choroplethLayer
+      console.log('✅ Choropleth layer created successfully:', choropletheLayer)
     } catch (err) {
-      console.warn('Choropleth data tidak tersedia:', err)
+      console.error('❌ Choropleth error:', err?.message || err)
+      console.error('❌ Error type:', err?.name)
+      console.error('❌ Full error:', err)
+      if (err?.stack) console.error('❌ Error stack:', err.stack)
     }
 
     // Zoom ke area Jawa
@@ -383,7 +551,9 @@ onMounted(async () => {
 
     isLoading.value = false
   } catch (err) {
-    console.error('Error loading map data:', err)
+    console.error('❌ GLOBAL ERROR in map onMounted:', err?.message || err)
+    console.error('❌ Error details:', err)
+    if (err?.stack) console.error('❌ Stack:', err.stack)
     error.value = err.message
     isLoading.value = false
   }
@@ -459,15 +629,23 @@ const toggleHeatmap = () => {
 }
 
 const toggleChoropleth = () => {
+  console.log('🔄 toggleChoropleth called')
+  console.log('  map:', map ? 'exists' : 'null')
+  console.log('  choropletheLayer:', choropletheLayer ? 'exists' : 'null')
   showChoropleth.value = !showChoropleth.value
-  if (!map || !choropletheLayer) return
+  if (!map || !choropletheLayer) {
+    console.warn('⚠️ Cannot toggle: map or choropletheLayer is null')
+    return
+  }
 
   if (showChoropleth.value) {
+    console.log('✅ Adding choropleth to map')
     choropletheLayer.addTo(map)
     if (clusterGroupRef) map.removeLayer(clusterGroupRef)
     if (heatmapLayer && map.hasLayer(heatmapLayer)) map.removeLayer(heatmapLayer)
     displayMode.value = 'choropleth'
   } else {
+    console.log('❌ Removing choropleth from map')
     map.removeLayer(choropletheLayer)
     if (clusterGroupRef) clusterGroupRef.addTo(map)
     displayMode.value = 'points'
@@ -478,8 +656,120 @@ const changeChoroplethMetric = (metric) => {
   choroplethMetric.value = metric
   // Reload choropleth dengan metric baru
   if (choropletheLayer && map.hasLayer(choropletheLayer)) {
+    // Rebuild layer based on new metric
     map.removeLayer(choropletheLayer)
-    toggleChoropleth()
+    // Recreate choropleth using current data/boundary
+    if (kabupatenBoundaryRef && santriGeoRef) {
+      // Trigger rebuild by re-running the same block via creating a new layer
+      try {
+        const boundaryData = kabupatenBoundaryRef
+        const geo = santriGeoRef
+        // Repeat minimal rebuild steps
+        const normalizeRegionName = (name) => {
+          if (!name || typeof name !== 'string') return 'UNKNOWN'
+          return name
+            .toLowerCase()
+            .replace(/kabupaten\s+/g, '')
+            .replace(/kab\.?\s*/g, '')
+            .replace(/kota\s+/g, '')
+            .replace(/kotamadya\s+/g, '')
+            .replace(/administrasi\s+/g, '')
+            .replace(/\./g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        }
+        const aggregateByKabupaten = (geoData) => {
+          const aggregate = {}
+          geoData.features?.forEach((feature) => {
+            const p = feature.properties || {}
+            const rawKab =
+              p.kabupaten ||
+              p.kabupaten_domisili ||
+              p.kab ||
+              p.regency ||
+              p.kabupaten_name ||
+              'Unknown'
+            const key = normalizeRegionName(rawKab)
+            if (!aggregate[key]) {
+              aggregate[key] = { count: 0, total_score: 0 }
+            }
+            aggregate[key].count += 1
+            const scoreVal = Number(p.score || p.skor || p.total_score || 0)
+            aggregate[key].total_score += isFinite(scoreVal) ? scoreVal : 0
+          })
+          return aggregate
+        }
+        const santriAggregated = aggregateByKabupaten(geo)
+        const metricIsCount = choroplethMetric.value === 'count'
+        const valuesForThresholds = Object.values(santriAggregated)
+          .map((v) => (metricIsCount ? v.count : v.total_score / (v.count || 1)))
+          .filter((v) => isFinite(v) && v > 0)
+        const sorted = [...valuesForThresholds].sort((a, b) => a - b)
+        const qs = [0.2, 0.4, 0.6, 0.8]
+        const thresholds = qs.map((q) => {
+          const idx = Math.floor(q * (sorted.length - 1))
+          return sorted[idx]
+        })
+        choroplethThresholdsRef = thresholds
+        const colors = ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444']
+        const pickColor = (value) => {
+          if (!isFinite(value) || value <= 0) return '#d1d5db'
+          if (thresholds.length === 0) return colors[0]
+          if (value <= thresholds[0]) return colors[0]
+          if (value <= thresholds[1]) return colors[1]
+          if (value <= thresholds[2]) return colors[2]
+          if (value <= thresholds[3]) return colors[3]
+          return colors[4]
+        }
+        choropletheLayer = L.geoJSON(boundaryData, {
+          style: (feature) => {
+            const rawName =
+              feature.properties?.nama ||
+              feature.properties?.NAME ||
+              feature.properties?.NAME_2 ||
+              'Unknown'
+            const key = normalizeRegionName(rawName)
+            const data = santriAggregated[key]
+            const value = data
+              ? metricIsCount
+                ? data.count
+                : data.total_score / (data.count || 1)
+              : NaN
+            return {
+              fillColor: pickColor(value),
+              weight: 2,
+              opacity: 0.7,
+              color: '#333',
+              fillOpacity: 0.6,
+            }
+          },
+          onEachFeature: (feature, layer) => {
+            const rawName =
+              feature.properties?.nama ||
+              feature.properties?.NAME ||
+              feature.properties?.NAME_2 ||
+              'Unknown'
+            const key = normalizeRegionName(rawName)
+            const data = santriAggregated[key]
+            const tooltip = data
+              ? metricIsCount
+                ? `<strong>${rawName}</strong><br>Santri: ${data.count}`
+                : `<strong>${rawName}</strong><br>Rata-rata Skor: ${(data.total_score / (data.count || 1)).toFixed(2)}`
+              : `<strong>${rawName}</strong><br>Data tidak tersedia`
+            layer.bindPopup(tooltip)
+            layer.on('mouseover', function () {
+              this.setStyle({ weight: 3, opacity: 1 })
+            })
+            layer.on('mouseout', function () {
+              this.setStyle({ weight: 2, opacity: 0.7 })
+            })
+          },
+        })
+        choropletheLayer.addTo(map)
+      } catch (e) {
+        console.warn('Gagal rebuild choropleth:', e)
+      }
+    }
   }
 }
 

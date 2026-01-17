@@ -95,77 +95,19 @@ onBeforeUnmount(() => {
           class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
           to="/"
         >
-          <span class="icon text-base lg:hidden">home</span>
           <span>Beranda</span>
         </RouterLink>
         <RouterLink
           class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
           to="/beranda#artikel"
         >
-          <span class="icon text-base lg:hidden">article</span>
           <span>Tujuan</span>
         </RouterLink>
-
-        <!-- Program Dropdown -->
-        <div class="relative">
-          <button
-            class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
-            @click="toggleDropdown('program')"
-          >
-            <span class="icon text-base lg:hidden">category</span>
-            <span>Program</span>
-            <span
-              class="icon text-sm lg:hidden"
-              :class="openDropdown === 'program' ? 'rotate-180' : ''"
-              >expand_more</span
-            >
-          </button>
-          <Transition
-            enter-active-class="transition ease-out duration-150"
-            enter-from-class="opacity-0 -translate-y-2 scale-95"
-            enter-to-class="opacity-100 translate-y-0 scale-100"
-            leave-active-class="transition ease-in duration-120"
-            leave-from-class="opacity-100 translate-y-0 scale-100"
-            leave-to-class="opacity-0 -translate-y-2 scale-95"
-          >
-            <div
-              v-if="openDropdown === 'program'"
-              class="absolute left-0 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white/95 text-slate-800 shadow-xl backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100"
-            >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/program-pendidikan-santri"
-                >Program Pendidikan Santri</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/program-kesejahteraan-santri"
-                >Program Kesejahteraan Santri</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/program-kesehatan-santri"
-                >Program Kesehatan Santri</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/program-infrastruktur-pesantren"
-                >Program Infrastruktur Pesantren</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/program-kemandirian-ekonomi"
-                >Program Kemandirian Ekonomi</RouterLink
-              >
-            </div>
-          </Transition>
-        </div>
 
         <RouterLink
           class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
           to="/beranda#galeri"
         >
-          <span class="icon text-base lg:hidden">photo_library</span>
           <span>Galeri</span>
         </RouterLink>
 
@@ -175,13 +117,7 @@ onBeforeUnmount(() => {
             class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
             @click="toggleDropdown('formulir')"
           >
-            <span class="icon text-base lg:hidden">description</span>
             <span>Formulir</span>
-            <span
-              class="icon text-sm lg:hidden"
-              :class="openDropdown === 'formulir' ? 'rotate-180' : ''"
-              >expand_more</span
-            >
           </button>
           <Transition
             enter-active-class="transition ease-out duration-150"
@@ -209,19 +145,62 @@ onBeforeUnmount(() => {
           </Transition>
         </div>
 
+        <!-- GIS/AI Dropdown -->
+        <div class="relative">
+          <button
+            class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
+            @click="toggleDropdown('gisai')"
+          >
+            <span>GIS/AI</span>
+          </button>
+          <Transition
+            enter-active-class="transition ease-out duration-150"
+            enter-from-class="opacity-0 -translate-y-2 scale-95"
+            enter-to-class="opacity-100 translate-y-0 scale-100"
+            leave-active-class="transition ease-in duration-120"
+            leave-from-class="opacity-100 translate-y-0 scale-100"
+            leave-to-class="opacity-0 -translate-y-2 scale-95"
+          >
+            <div
+              v-if="openDropdown === 'gisai'"
+              class="absolute left-0 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white/95 text-slate-800 shadow-xl backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100"
+            >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/gis-ai-teknologi"
+                >Teknologi GIS & AI</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/peta-santri"
+                >Peta Sebaran Santri</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/peta-pesantren"
+                >Peta Pesantren</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/nl2sql"
+                >AI Query</RouterLink
+              >
+              <RouterLink
+                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
+                to="/ai-vision"
+                >AI Vision Analytics</RouterLink
+              >
+            </div>
+          </Transition>
+        </div>
+
         <!-- Dashboard Dropdown -->
         <div class="relative">
           <button
             class="flex items-center gap-2 rounded-xl px-3 py-2 transition hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800/70 dark:hover:text-cyan-200"
             @click="toggleDropdown('dashboard')"
           >
-            <span class="icon text-base lg:hidden">dashboard</span>
             <span>Dashboard</span>
-            <span
-              class="icon text-sm lg:hidden"
-              :class="openDropdown === 'dashboard' ? 'rotate-180' : ''"
-              >expand_more</span
-            >
           </button>
           <Transition
             enter-active-class="transition ease-out duration-150"
@@ -239,26 +218,6 @@ onBeforeUnmount(() => {
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
                 to="/dashboard"
                 >Dashboard Analytics</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/peta-santri"
-                >Peta Santri</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/peta-pesantren"
-                >Peta Pesantren</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/nl2sql"
-                >AI Query</RouterLink
-              >
-              <RouterLink
-                class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
-                to="/ai-vision"
-                >🤖 AI Vision Analytics</RouterLink
               >
               <RouterLink
                 class="block px-4 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70"
@@ -349,62 +308,35 @@ onBeforeUnmount(() => {
             <span class="icon text-base">{{ theme === 'dark' ? 'dark_mode' : 'light_mode' }}</span>
             <span>Mode {{ theme === 'dark' ? 'Dark' : 'Light' }}</span>
           </button>
-          <a
+
+          <RouterLink
             class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-            href="#beranda"
+            to="/"
+            @click="closeAll"
           >
             <span class="icon text-base">home</span>
             Beranda
-          </a>
-          <a
+          </RouterLink>
+
+          <RouterLink
             class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-            href="#tujuan"
+            to="/beranda#artikel"
+            @click="closeAll"
           >
             <span class="icon text-base">article</span>
             Tujuan
-          </a>
+          </RouterLink>
 
-          <div
-            class="rounded-lg border border-slate-200 bg-slate-50/90 dark:border-slate-800/60 dark:bg-slate-900/60"
-          >
-            <button
-              class="flex w-full items-center justify-between px-3 py-2 text-left font-medium"
-              @click="toggleDropdown('program')"
-            >
-              <span class="flex items-center gap-2"
-                ><span class="icon text-base">category</span> Program</span
-              >
-              <span class="icon text-sm" :class="openDropdown === 'program' ? 'rotate-180' : ''"
-                >expand_more</span
-              >
-            </button>
-            <div v-if="openDropdown === 'program'" class="space-y-1 px-3 pb-3">
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#program-1"
-                >Program 1</a
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#program-2"
-                >Program 2</a
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#program-3"
-                >Program 3</a
-              >
-            </div>
-          </div>
-
-          <a
+          <RouterLink
             class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-            href="#galeri"
+            to="/beranda#galeri"
+            @click="closeAll"
           >
             <span class="icon text-base">photo_library</span>
             Galeri
-          </a>
+          </RouterLink>
 
+          <!-- Formulir Dropdown -->
           <div
             class="rounded-lg border border-slate-200 bg-slate-50/90 dark:border-slate-800/60 dark:bg-slate-900/60"
           >
@@ -415,19 +347,21 @@ onBeforeUnmount(() => {
               <span class="flex items-center gap-2"
                 ><span class="icon text-base">description</span> Formulir</span
               >
-              <span class="icon text-sm" :class="openDropdown === 'formulir' ? 'rotate-180' : ''"
+              <span
+                class="icon text-sm transition-transform"
+                :class="openDropdown === 'formulir' ? 'rotate-180' : ''"
                 >expand_more</span
               >
             </button>
             <div v-if="openDropdown === 'formulir'" class="space-y-1 px-3 pb-3">
               <RouterLink
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 to="/pondok"
                 @click="closeAll"
                 >Data Pondok</RouterLink
               >
               <RouterLink
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 to="/santri"
                 @click="closeAll"
                 >Data Santri</RouterLink
@@ -435,6 +369,58 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
+          <!-- GIS/AI Dropdown -->
+          <div
+            class="rounded-lg border border-slate-200 bg-slate-50/90 dark:border-slate-800/60 dark:bg-slate-900/60"
+          >
+            <button
+              class="flex w-full items-center justify-between px-3 py-2 text-left font-medium"
+              @click="toggleDropdown('gisai')"
+            >
+              <span class="flex items-center gap-2"
+                ><span class="icon text-base">map</span> GIS/AI</span
+              >
+              <span
+                class="icon text-sm transition-transform"
+                :class="openDropdown === 'gisai' ? 'rotate-180' : ''"
+                >expand_more</span
+              >
+            </button>
+            <div v-if="openDropdown === 'gisai'" class="space-y-1 px-3 pb-3">
+              <RouterLink
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/gis-ai-teknologi"
+                @click="closeAll"
+                >Teknologi GIS & AI</RouterLink
+              >
+              <RouterLink
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/peta-santri"
+                @click="closeAll"
+                >Peta Sebaran Santri</RouterLink
+              >
+              <RouterLink
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/peta-pesantren"
+                @click="closeAll"
+                >Peta Pesantren</RouterLink
+              >
+              <RouterLink
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/nl2sql"
+                @click="closeAll"
+                >AI Query</RouterLink
+              >
+              <RouterLink
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/ai-vision"
+                @click="closeAll"
+                >AI Vision Analytics</RouterLink
+              >
+            </div>
+          </div>
+
+          <!-- Dashboard Dropdown -->
           <div
             class="rounded-lg border border-slate-200 bg-slate-50/90 dark:border-slate-800/60 dark:bg-slate-900/60"
           >
@@ -445,48 +431,30 @@ onBeforeUnmount(() => {
               <span class="flex items-center gap-2"
                 ><span class="icon text-base">dashboard</span> Dashboard</span
               >
-              <span class="icon text-sm" :class="openDropdown === 'dashboard' ? 'rotate-180' : ''"
+              <span
+                class="icon text-sm transition-transform"
+                :class="openDropdown === 'dashboard' ? 'rotate-180' : ''"
                 >expand_more</span
               >
             </button>
             <div v-if="openDropdown === 'dashboard'" class="space-y-1 px-3 pb-3">
               <RouterLink
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                to="/peta-santri"
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/dashboard"
                 @click="closeAll"
-                >Peta Santri</RouterLink
+                >Dashboard Analytics</RouterLink
               >
               <RouterLink
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                to="/peta-pesantren"
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/sebaran-santri"
                 @click="closeAll"
-                >Peta Pesantren</RouterLink
+                >Sebaran Santri</RouterLink
               >
               <RouterLink
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                to="/ai-vision"
+                class="block rounded-md px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                to="/distribusi-bantuan"
                 @click="closeAll"
-                >🤖 AI Vision Analytics</RouterLink
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#sebaran-santri"
-                >Sebaran Santri</a
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#data-donatur"
-                >Data Donatur</a
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#distribusi-bantuan"
-                >Distribusi Bantuan</a
-              >
-              <a
-                class="block rounded-md px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                href="#klasifikasi-bantuan"
-                >Klasifikasi Bantuan</a
+                >Distribusi Bantuan</RouterLink
               >
             </div>
           </div>

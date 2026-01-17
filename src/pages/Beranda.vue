@@ -53,7 +53,7 @@ const quickQueries = [
           <h1
             class="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl text-slate-900 dark:text-white"
           >
-            Memberdayakan Santri, Membangun Masa Depan Peradaban
+            Memberdayakan Santri, Membangun Masa Depan Bangsa
           </h1>
         </div>
 
@@ -93,16 +93,19 @@ const quickQueries = [
 
         <div class="space-y-4 mt-10">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white">
-            Pilar-Pilar Program Nasional
+            Tahap-tahap Program Bantuan Santri
           </h2>
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div
               class="rounded-lg bg-white dark:from-purple-500/10 border-2 border-purple-300 dark:border-purple-500/20 p-4 text-center shadow-md hover:shadow-lg dark:hover:from-purple-500/15 transition"
             >
-              <div class="text-3xl mb-2">🎓</div>
-              <h3 class="font-semibold text-sm text-purple-900 dark:text-purple-300">Pendidikan</h3>
+              <div class="text-3xl mb-2">📋</div>
+              <h3 class="font-semibold text-sm text-purple-900 dark:text-purple-300">
+                Pengumpulan Data
+              </h3>
               <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">
-                Program akademik berkualitas dan pemberdayaan intelektual
+                Pengumpulan Data dan Survey Lapangan untuk pemetaan santri maupun lingkungan
+                pendidikan pesantren
               </p>
             </div>
             <div
@@ -110,37 +113,41 @@ const quickQueries = [
             >
               <div class="text-3xl mb-2">🛡️</div>
               <h3 class="font-semibold text-sm text-green-900 dark:text-green-300">
-                Kesejahteraan
+                Scoring dan Klasifikasi
               </h3>
               <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">
-                Bantuan finansial dan kebutuhan dasar santri
+                Melakukan scoring atas semua data parameter yang telah dikumpulkan
               </p>
             </div>
             <div
               class="rounded-lg bg-white dark:from-red-500/10 border-2 border-red-300 dark:border-red-500/20 p-4 text-center shadow-md hover:shadow-lg dark:hover:from-red-500/15 transition"
             >
-              <div class="text-3xl mb-2">❤️</div>
-              <h3 class="font-semibold text-sm text-red-900 dark:text-red-300">Kesehatan</h3>
+              <div class="text-3xl mb-2">🗺️</div>
+              <h3 class="font-semibold text-sm text-red-900 dark:text-red-300">Pemetaan</h3>
               <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">
-                Fasilitas kesehatan dan program gizi santri
+                Pemetaan kondisi sosial ekonomi santri berdasarkan hasil scoring melalui Metoda GIS
+                (Gegraphical Information System)
               </p>
             </div>
             <div
               class="rounded-lg bg-white dark:from-blue-500/10 border-2 border-blue-300 dark:border-blue-500/20 p-4 text-center shadow-md hover:shadow-lg dark:hover:from-blue-500/15 transition"
             >
-              <div class="text-3xl mb-2">🏢</div>
-              <h3 class="font-semibold text-sm text-blue-900 dark:text-blue-300">Infrastruktur</h3>
+              <div class="text-3xl mb-2">📊</div>
+              <h3 class="font-semibold text-sm text-blue-900 dark:text-blue-300">Analisa Data</h3>
               <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">
-                Fasilitas modern dan lingkungan belajar berkualitas
+                Analisa untuk menentukan prioritas bantuan guna tepat sasaran serta berdampak
+                signifikan.
               </p>
             </div>
             <div
               class="rounded-lg bg-white dark:from-amber-500/10 border-2 border-amber-300 dark:border-amber-500/20 p-4 text-center shadow-md hover:shadow-lg dark:hover:from-amber-500/15 transition"
             >
-              <div class="text-3xl mb-2">💼</div>
-              <h3 class="font-semibold text-sm text-amber-900 dark:text-amber-300">Ekonomi</h3>
+              <div class="text-3xl mb-2">🤝</div>
+              <h3 class="font-semibold text-sm text-amber-900 dark:text-amber-300">
+                Penyaluran Bantuan
+              </h3>
               <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">
-                Pelatihan kewirausahaan dan modal usaha
+                Penyaluran bantuan langsung ke santri dan pesantren yang membutuhkan.
               </p>
             </div>
           </div>
@@ -245,14 +252,14 @@ const quickQueries = [
         <div class="relative z-10 flex h-full items-center justify-start px-6 py-8 sm:px-8">
           <div class="max-w-xl space-y-2 text-white drop-shadow">
             <p class="text-xs uppercase tracking-[0.2em] text-cyan-100 dark:text-cyan-200">
-              Panorama Pesantren
+              Dari Pendidikan Agama ke Kemandirian Ekonomi dan Sosial
             </p>
             <h2 class="text-2xl font-bold sm:text-3xl text-white dark:text-white">
-              Napak tilas jejak santri
+              Dari Santri untuk Negeri
             </h2>
             <p class="text-sm text-slate-100/90 dark:text-slate-200/90">
-              Parallax pembuka artikel menampilkan suasana pesantren untuk membawa pembaca masuk ke
-              cerita.
+              Pengentasan Kemiskinan di Lingkungan Pesantren bagian dari Misi Besar Pembangunan
+              Bangsa
             </p>
           </div>
         </div>
@@ -370,7 +377,7 @@ const quickQueries = [
           class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
         >
           <img
-            src="/images/santri_pesantren_ngaji.png"
+            src="../assets/images/santri_pesantren_cium.png"
             alt="Santri mengaji bersama"
             class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
           />
@@ -391,31 +398,116 @@ const quickQueries = [
           <figcaption
             class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
           >
-            👥 Kemandirian & gotong royong
+            Kemandirian & gotong royong
           </figcaption>
         </figure>
         <figure
           class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
         >
           <img
-            src="/images/santri_pesantren_lomba.jpg"
+            src="../assets/images/santri_berjuang.png"
             alt="Sejarah santri dan kemerdekaan"
             class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
           />
           <figcaption
             class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
           >
-            🏆 Sejarah kontribusi santri
+            Sejarah kontribusi Santri dalam Kemerdekaan
+          </figcaption>
+        </figure>
+        <figure
+          class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
+        >
+          <img
+            src="../assets/images/santri_pesantren_makan.png"
+            alt="Santri mengaji bersama"
+            class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <figcaption
+            class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
+          >
+            Program MBG Santri
+          </figcaption>
+        </figure>
+        <figure
+          class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
+        >
+          <img
+            src="../assets/images/santri_pesantren_lomba.jpg"
+            alt="Santri mengaji bersama"
+            class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <figcaption
+            class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
+          >
+            Santri Selalu Mencintai Tanah Air
+          </figcaption>
+        </figure>
+        <figure
+          class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
+        >
+          <img
+            src="../assets/images/santri_pesantren_prihatin.png"
+            alt="Santri mengaji bersama"
+            class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <figcaption
+            class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
+          >
+            Santri yang Memerlukan Bantuan Kita
+          </figcaption>
+        </figure>
+        <figure
+          class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
+        >
+          <img
+            src="../assets/images/santri_pesantren_komputer.png"
+            alt="Santri mengaji bersama"
+            class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <figcaption
+            class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
+          >
+            Santri dan Teknologi Informasi
+          </figcaption>
+        </figure>
+        <figure
+          class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
+        >
+          <img
+            src="../assets/images/santri_pesantren_mesin.png"
+            alt="Santri mengaji bersama"
+            class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <figcaption
+            class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
+          >
+            Vokasi/BLK untuk Keterampilan Santri
+          </figcaption>
+        </figure>
+        <figure
+          class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-slate-900/30 transition-all"
+        >
+          <img
+            src="../assets/images/santri_pesantren_hadrah.png"
+            alt="Santri mengaji bersama"
+            class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <figcaption
+            class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300 bg-gradient-to-r from-transparent to-white dark:to-slate-900/50"
+          >
+            Seni & Budaya Pesantren
           </figcaption>
         </figure>
       </div>
       <div
         class="mt-4 text-xs text-slate-500 dark:text-slate-400 p-3 bg-slate-100 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-800"
       >
-        📁 Jika gambar belum tampil, pastikan nama file sesuai dan diletakkan di
+        Program Bantuan Santri Nasional dikoordinasi oleh Kementerian Koordinator Bidang
+        Pemberdayaan Masyarakat
         <code
           class="bg-white dark:bg-slate-800 px-2 py-1 rounded text-slate-900 dark:text-slate-100"
-          >public/images</code
+          >(Humas Kemenko PM)</code
         >.
       </div>
     </div>
